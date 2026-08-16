@@ -1,0 +1,6 @@
+{
+  "name": "Crack Skull AI",
+  "description": "Crack your exams. Master your future. Futuristic AI exam preparation copilot with adaptive study planning, PDF learning, exam radar, quizzes, viva simulator, and academic analytics.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
