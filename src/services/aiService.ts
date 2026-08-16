@@ -295,28 +295,103 @@ function buildOfflineMathReply(message: string): string | null {
 **Answer: ${formatNumber(result)}**`;
   }
 
-  const derivative = message.match(/(?:differentiate|derivative\s+of|derive)\s+(?:of\s+)?x\^?(\d+)/i);
-  if (derivative) {
-    const power = Number(derivative[1]);
-    return `### Derivative of x^${power}
+  const derivativeExpression = extractDerivativeExpression(message);
+  const derivativeTerms = derivativeExpression ? differentiatePolynomial(derivativeExpression) : null;
+  if (derivativeExpression && derivativeTerms) {
+    const steps = derivativeTerms.steps.map(step => `- ${step}`).join('\n');
+
+    return `### Derivative of ${derivativeTerms.expression}
+
+#### Given
+\`\`\`text
+d/dx(${derivativeTerms.expression})
+\`\`\`
 
 #### Formula
 \`\`\`text
 d/dx(x^n) = n x^(n-1)
+d/dx(a + b) = d/dx(a) + d/dx(b)
 \`\`\`
 
 #### Steps
-\`\`\`text
-d/dx(x^${power})
-= ${power}x^(${power} - 1)
-= ${power}x^${power - 1}
-\`\`\`
+${steps}
 
 #### Final Answer
-**Answer: ${power}x^${power - 1}**`;
+**Answer: ${derivativeTerms.result}**`;
   }
 
   return null;
+}
+
+function extractDerivativeExpression(message: string): string | null {
+  const match = message.match(/(?:differentiate|derivative\s+of|derive|d\/dx|find\s+the\s+derivative\s+of|solve\s+derivative\s+of)\s*(?:of\s+)?(.+)$/i);
+  if (!match?.[1]) return null;
+  const expression = match[1]
+    .replace(/\s+(and|then)\s+(explain|show|give|tell)\b[\s\S]*$/i, '')
+    .replace(/\s+with\s+respect\s+to\s+x\b[\s\S]*$/i, '')
+    .replace(/[?.!]+$/g, '')
+    .trim();
+  return expression || null;
+}
+
+function differentiatePolynomial(expression: string): { expression: string; result: string; steps: string[] } | null {
+  const compact = expression.replace(/\s+/g, '');
+  if (!/^[+\-]?(?:\d*\.?\d*)?x(?:\^-?\d+)?(?:[+\-](?:(?:\d*\.?\d*)?x(?:\^-?\d+)?|\d+(?:\.\d+)?))*$/i.test(compact)) {
+    return null;
+  }
+
+  const terms = compact.match(/[+\-]?[^+\-]+/g) || [];
+  const derivedTerms: string[] = [];
+  const steps: string[] = [];
+  const formattedTerms: string[] = [];
+
+  for (const term of terms) {
+    const parsed = parsePolynomialTerm(term);
+    if (!parsed) return null;
+    const formatted = formatPolynomialTerm(parsed.coefficient, parsed.power);
+    const derivative = formatPolynomialTerm(parsed.coefficient * parsed.power, parsed.power - 1);
+    formattedTerms.push(formatted);
+    if (derivative !== '0') {
+      derivedTerms.push(derivative);
+    }
+    steps.push(`d/dx(${formatted}) = ${derivative}`);
+  }
+
+  return {
+    expression: formattedTerms.join(' + ').replace(/\+ -/g, '- '),
+    result: derivedTerms.length ? derivedTerms.join(' + ').replace(/\+ -/g, '- ') : '0',
+    steps,
+  };
+}
+
+function parsePolynomialTerm(term: string): { coefficient: number; power: number } | null {
+  if (!term.includes('x')) {
+    const constant = Number(term);
+    return Number.isFinite(constant) ? { coefficient: constant, power: 0 } : null;
+  }
+
+  const match = term.match(/^([+\-]?\d*\.?\d*)?x(?:\^([+\-]?\d+))?$/i);
+  if (!match) return null;
+  const rawCoefficient = match[1];
+  const coefficient = rawCoefficient === '' || rawCoefficient === undefined || rawCoefficient === '+'
+    ? 1
+    : rawCoefficient === '-'
+      ? -1
+      : Number(rawCoefficient);
+  const power = match[2] === undefined ? 1 : Number(match[2]);
+  if (!Number.isFinite(coefficient) || !Number.isFinite(power)) return null;
+  return { coefficient, power };
+}
+
+function formatPolynomialTerm(coefficient: number, power: number): string {
+  if (coefficient === 0) return '0';
+  if (power === 0) return formatNumber(coefficient);
+
+  const absCoeff = Math.abs(coefficient);
+  const sign = coefficient < 0 ? '-' : '';
+  const coeffText = absCoeff === 1 ? '' : formatNumber(absCoeff);
+  const powerText = power === 1 ? 'x' : `x^${power}`;
+  return `${sign}${coeffText}${powerText}`;
 }
 
 function formatNumber(value: number): string {

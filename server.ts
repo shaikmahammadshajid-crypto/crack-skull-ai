@@ -18,6 +18,11 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const NVIDIA_BASE_URL = process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
 const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
 const NVIDIA_TIMEOUT_MS = Number(process.env.NVIDIA_TIMEOUT_MS) || 35000;
+const getNvidiaApiKey = () =>
+  process.env.NVIDIA_API_KEY ||
+  process.env.NVIDIA_INFERENCE_API_KEY ||
+  process.env.Vibe_Coder ||
+  '';
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -44,7 +49,7 @@ async function callNvidiaChat(params: {
   temperature?: number;
   maxTokens?: number;
 }): Promise<string | null> {
-  const apiKey = process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY || process.env.Vide_Coders;
+  const apiKey = getNvidiaApiKey();
   if (!apiKey) return null;
 
   const controller = new AbortController();
@@ -107,12 +112,13 @@ function parseJsonFromText<T = any>(text: string | null | undefined, fallback: T
 
 // Health check
 app.get('/api/health', (req, res) => {
+  const hasNvidiaKey = !!getNvidiaApiKey();
   res.json({
     status: 'ok',
     appName: 'Crack Skull AI',
     version: '1.0.0',
-    aiProvider: process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY || process.env.Vide_Coders ? 'nvidia' : process.env.GEMINI_API_KEY ? 'gemini' : 'offline',
-    hasNvidiaKey: !!(process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY || process.env.Vide_Coders),
+    aiProvider: hasNvidiaKey ? 'nvidia' : process.env.GEMINI_API_KEY ? 'gemini' : 'offline',
+    hasNvidiaKey,
     hasApiKey: !!process.env.GEMINI_API_KEY,
   });
 });
@@ -941,7 +947,7 @@ ${mistakes}
 #### 6. Viva Practice Questions
 ${viva}
 
-Live AI is not configured or reachable on this deployment right now, so this is the improved offline academic fallback. Add \`NVIDIA_API_KEY\`, \`Vide_Coders\`, or \`GEMINI_API_KEY\` in your environment to enable full exact AI responses.`;
+Live AI is not configured or reachable on this deployment right now, so this is the improved offline academic fallback. Add \`NVIDIA_API_KEY\`, \`Vibe_Coder\`, or \`GEMINI_API_KEY\` in your environment to enable full exact AI responses.`;
 }
 
 function enhanceAcademicReply(reply: string, message: string, subject?: string): string {
@@ -1008,35 +1014,109 @@ Here, **n = ${power}**, so:
 Mention the **power rule**, write the substitution of upper and lower limits clearly, and do not forget the subtraction order: **upper limit value - lower limit value**.`;
   }
 
-  const derivative = message.match(/(?:differentiate|derivative\s+of|derive)\s+(?:of\s+)?x\^?(\d+)/i);
-  if (derivative) {
-    const power = Number(derivative[1]);
-    const newPower = power - 1;
+  const derivativeExpression = extractDerivativeExpression(message);
+  const derivativeTerms = derivativeExpression ? differentiatePolynomial(derivativeExpression) : null;
+  if (derivativeExpression && derivativeTerms) {
+    const steps = derivativeTerms.steps.map(step => `- ${step}`).join('\n');
 
-    return `### Derivative of x^${power}
+    return `### Derivative of ${derivativeTerms.expression}
 
 ${languageNote}
 
-#### 1. Formula Used
-Power rule of differentiation:
+#### 1. Given
+Find:
+
+\`\`\`text
+d/dx(${derivativeTerms.expression})
+\`\`\`
+
+#### 2. Formula Used
+Power rule and sum rule of differentiation:
 
 \`\`\`text
 d/dx(x^n) = n x^(n-1)
+d/dx(a + b) = d/dx(a) + d/dx(b)
 \`\`\`
 
-#### 2. Step-by-Step Solution
-\`\`\`text
-d/dx(x^${power})
-= ${power}x^(${power} - 1)
-= ${power}x^${newPower}
-\`\`\`
+#### 3. Step-by-Step Solution
+${steps}
 
-#### 3. Final Answer
+#### 4. Final Answer
 
-**Answer: ${power}x^${newPower}**`;
+**Answer: ${derivativeTerms.result}**`;
   }
 
   return null;
+}
+
+function extractDerivativeExpression(message: string): string | null {
+  const match = message.match(/(?:differentiate|derivative\s+of|derive|d\/dx|find\s+the\s+derivative\s+of|solve\s+derivative\s+of)\s*(?:of\s+)?(.+)$/i);
+  if (!match?.[1]) return null;
+  const expression = match[1]
+    .replace(/\s+(and|then)\s+(explain|show|give|tell)\b[\s\S]*$/i, '')
+    .replace(/\s+with\s+respect\s+to\s+x\b[\s\S]*$/i, '')
+    .replace(/[?.!]+$/g, '')
+    .trim();
+  return expression || null;
+}
+
+function differentiatePolynomial(expression: string): { expression: string; result: string; steps: string[] } | null {
+  const compact = expression.replace(/\s+/g, '');
+  if (!/^[+\-]?(?:\d*\.?\d*)?x(?:\^-?\d+)?(?:[+\-](?:(?:\d*\.?\d*)?x(?:\^-?\d+)?|\d+(?:\.\d+)?))*$/i.test(compact)) {
+    return null;
+  }
+
+  const terms = compact.match(/[+\-]?[^+\-]+/g) || [];
+  const derivedTerms: string[] = [];
+  const steps: string[] = [];
+
+  for (const term of terms) {
+    const parsed = parsePolynomialTerm(term);
+    if (!parsed) return null;
+    const derivedCoeff = parsed.coefficient * parsed.power;
+    const derivedPower = parsed.power - 1;
+    const derivative = formatPolynomialTerm(derivedCoeff, derivedPower);
+    if (derivative !== '0') {
+      derivedTerms.push(derivative);
+    }
+    steps.push(`d/dx(${formatPolynomialTerm(parsed.coefficient, parsed.power)}) = ${derivative}`);
+  }
+
+  return {
+    expression: terms.map(term => formatPolynomialTerm(parsePolynomialTerm(term)!.coefficient, parsePolynomialTerm(term)!.power)).join(' + ').replace(/\+ -/g, '- '),
+    result: derivedTerms.length ? derivedTerms.join(' + ').replace(/\+ -/g, '- ') : '0',
+    steps,
+  };
+}
+
+function parsePolynomialTerm(term: string): { coefficient: number; power: number } | null {
+  if (!term.includes('x')) {
+    const constant = Number(term);
+    return Number.isFinite(constant) ? { coefficient: constant, power: 0 } : null;
+  }
+
+  const match = term.match(/^([+\-]?\d*\.?\d*)?x(?:\^([+\-]?\d+))?$/i);
+  if (!match) return null;
+  const rawCoefficient = match[1];
+  const coefficient = rawCoefficient === '' || rawCoefficient === undefined || rawCoefficient === '+'
+    ? 1
+    : rawCoefficient === '-'
+      ? -1
+      : Number(rawCoefficient);
+  const power = match[2] === undefined ? 1 : Number(match[2]);
+  if (!Number.isFinite(coefficient) || !Number.isFinite(power)) return null;
+  return { coefficient, power };
+}
+
+function formatPolynomialTerm(coefficient: number, power: number): string {
+  if (coefficient === 0) return '0';
+  if (power === 0) return formatNumber(coefficient);
+
+  const absCoeff = Math.abs(coefficient);
+  const sign = coefficient < 0 ? '-' : '';
+  const coeffText = absCoeff === 1 ? '' : formatNumber(absCoeff);
+  const powerText = power === 1 ? 'x' : `x^${power}`;
+  return `${sign}${coeffText}${powerText}`;
 }
 
 function formatNumber(value: number): string {

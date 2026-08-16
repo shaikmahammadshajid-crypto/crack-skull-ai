@@ -20,5 +20,5 @@ services:
         value: "35000"
       - key: NVIDIA_API_KEY
         sync: false
-      - key: Vide_Coders
+      - key: Vibe_Coder
         sync: false

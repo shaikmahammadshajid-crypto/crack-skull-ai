@@ -10,6 +10,72 @@ export interface TopicKnowledge {
 
 const topicPacks: Array<{ patterns: RegExp[]; data: TopicKnowledge }> = [
   {
+    patterns: [/demand elasticity/i, /elasticity of demand/i, /price elasticity/i],
+    data: {
+      title: 'Price Elasticity of Demand',
+      definition: 'Price elasticity of demand measures how strongly the quantity demanded of a product changes when its price changes.',
+      keypoints: [
+        'It is calculated as percentage change in quantity demanded divided by percentage change in price.',
+        'Elastic demand means quantity changes more than price; inelastic demand means quantity changes less than price.',
+        'Luxury goods usually have more elastic demand than essential goods.',
+        'Businesses use elasticity to decide pricing, revenue strategy, and taxation impact.',
+      ],
+      examKeywords: ['percentage change', 'quantity demanded', 'price change', 'elastic demand', 'inelastic demand', 'total revenue'],
+      idealAnswer: 'Price elasticity of demand is the responsiveness of quantity demanded to a change in price. It is measured as % change in quantity demanded divided by % change in price. If demand is elastic, a price rise reduces quantity demanded significantly; if demand is inelastic, quantity demanded changes only slightly. For example, demand for medicines is usually inelastic, while demand for branded luxury items is more elastic.',
+      commonMistakes: ['Forgetting percentage change', 'Confusing demand with quantity demanded', 'Not linking elasticity with total revenue'],
+      vivaQuestions: [
+        'What is price elasticity of demand?',
+        'Give one example of elastic demand and one of inelastic demand.',
+        'Why is elasticity important for pricing decisions?',
+        'How does elasticity affect total revenue?',
+      ],
+    },
+  },
+  {
+    patterns: [/newton'?s laws?/i, /laws? of motion/i],
+    data: {
+      title: "Newton's Laws of Motion",
+      definition: "Newton's laws describe the relationship between force, mass, and motion.",
+      keypoints: [
+        'First law: a body remains at rest or uniform motion unless acted on by an external force.',
+        'Second law: force equals mass multiplied by acceleration, F = ma.',
+        'Third law: every action has an equal and opposite reaction.',
+        'The laws explain everyday motion, vehicle dynamics, rockets, and mechanical systems.',
+      ],
+      examKeywords: ['inertia', 'external force', 'F = ma', 'acceleration', 'action reaction pair', 'net force'],
+      idealAnswer: "Newton's three laws explain motion. The first law defines inertia, the second law gives the mathematical relation F = ma, and the third law states that forces occur in equal and opposite pairs. These laws are used to analyze moving vehicles, falling bodies, machines, and rocket propulsion.",
+      commonMistakes: ['Missing inertia in first law', 'Forgetting net force in F = ma', 'Calling action and reaction forces a balanced pair on the same body'],
+      vivaQuestions: [
+        'What is inertia?',
+        'State Newton’s second law with formula.',
+        'Why do action and reaction not cancel each other?',
+        'Give one real-life example of Newton’s third law.',
+      ],
+    },
+  },
+  {
+    patterns: [/contract law/i, /valid contract/i, /essentials of contract/i],
+    data: {
+      title: 'Essentials of a Valid Contract',
+      definition: 'A valid contract is a legally enforceable agreement made with free consent, lawful consideration, lawful object, and competent parties.',
+      keypoints: [
+        'There must be a lawful offer and acceptance.',
+        'Parties must be competent to contract.',
+        'Consent must be free from coercion, fraud, misrepresentation, undue influence, or mistake.',
+        'The agreement must have lawful consideration and lawful object.',
+      ],
+      examKeywords: ['offer', 'acceptance', 'consideration', 'free consent', 'competent parties', 'lawful object'],
+      idealAnswer: 'The essentials of a valid contract include offer and acceptance, intention to create legal relations, lawful consideration, competent parties, free consent, lawful object, certainty of terms, and legal enforceability. If any essential element is missing, the agreement may become void, voidable, or unenforceable depending on the defect.',
+      commonMistakes: ['Ignoring free consent', 'Confusing void and voidable contracts', 'Not mentioning lawful consideration'],
+      vivaQuestions: [
+        'What is the difference between agreement and contract?',
+        'What is free consent?',
+        'Why is consideration important?',
+        'When does a contract become voidable?',
+      ],
+    },
+  },
+  {
     patterns: [/acid/i, /transaction/i],
     data: {
       title: 'ACID Properties in DBMS',
@@ -126,7 +192,7 @@ export function findTopicKnowledge(input = '', subject = ''): TopicKnowledge {
   const found = topicPacks.find(pack => pack.patterns.some(pattern => pattern.test(text)));
   if (found) return found.data;
 
-  const title = input.trim() || subject || 'Selected Academic Topic';
+  const title = cleanTopicTitle(input, subject);
   return {
     title,
     definition: `${title} is an academic concept that should be answered through definition, working principle, example, and exam relevance.`,
@@ -146,4 +212,13 @@ export function findTopicKnowledge(input = '', subject = ''): TopicKnowledge {
       `What is one limitation or common mistake in ${title}?`,
     ],
   };
+}
+
+function cleanTopicTitle(input = '', subject = ''): string {
+  const cleaned = input
+    .replace(/^(explain|what is|define|describe|give|make|create|tell me|how to|please|solve)\s+/i, '')
+    .replace(/\s+for\s+(a|an|the)?\s*[\w\s-]*student\b/i, '')
+    .replace(/\?+$/g, '')
+    .trim();
+  return cleaned || subject || 'Selected Academic Topic';
 }
