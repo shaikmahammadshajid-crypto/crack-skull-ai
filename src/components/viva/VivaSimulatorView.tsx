@@ -34,6 +34,7 @@ export const VivaSimulatorView: React.FC = () => {
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [finalScore, setFinalScore] = useState<number | null>(null);
+  const [lastEvaluation, setLastEvaluation] = useState<any | null>(null);
 
   const recognitionRef = useRef<any>(null);
 
@@ -63,6 +64,7 @@ export const VivaSimulatorView: React.FC = () => {
     setSessionActive(true);
     setQuestionCount(1);
     setHistory([]);
+    setLastEvaluation(null);
     setFinalScore(null);
     setStudentAnswer('');
     setIsEvaluating(true);
@@ -135,10 +137,15 @@ export const VivaSimulatorView: React.FC = () => {
         feedback: evaluation.feedback || evaluation.verdict || 'Good articulation with clear technical keywords.',
         strengths: evaluation.strengths || ['Good clarity', 'Accurate definitions'],
         improvements: evaluation.improvements || ['Could mention edge cases'],
+        missingKeywords: evaluation.missingKeywords || [],
+        mistakeAnalysis: evaluation.mistakeAnalysis || 'Add more exact technical terms and a concrete example.',
+        idealAnswer: evaluation.idealAnswer || 'A strong answer should define the concept, mention key terms, give one example, and state a limitation.',
+        microLesson: evaluation.microLesson || 'Use definition, keywords, example, and limitation in every viva answer.',
       };
 
       const updatedHistory = [...history, entry];
       setHistory(updatedHistory);
+      setLastEvaluation(entry);
       setStudentAnswer('');
 
       if (questionCount >= 4) {
@@ -325,6 +332,7 @@ export const VivaSimulatorView: React.FC = () => {
                 <div className="font-semibold text-white">"{h.question}"</div>
                 <div className="text-slate-300 text-[11px] italic">Your Answer: "{h.answer}"</div>
                 <div className="text-purple-300 text-[11px]">Examiner Feedback: {h.feedback}</div>
+                <div className="text-emerald-300 text-[11px]">Ideal Answer: {h.idealAnswer}</div>
               </div>
             ))}
           </div>
@@ -428,6 +436,50 @@ export const VivaSimulatorView: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {lastEvaluation && (
+            <div className="p-5 rounded-3xl bg-slate-950/70 border border-emerald-500/30 space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold">
+                  <CheckCircle2 size={16} />
+                  <span>Previous Answer Review</span>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-black">
+                  {lastEvaluation.score}/100
+                </span>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
+                  <div className="font-bold text-rose-300 flex items-center gap-1.5">
+                    <AlertCircle size={14} />
+                    Mistake Analysis
+                  </div>
+                  <p className="mt-2 text-slate-300 leading-5">{lastEvaluation.mistakeAnalysis}</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
+                  <div className="font-bold text-purple-300">Missing Keywords</div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {(lastEvaluation.missingKeywords?.length ? lastEvaluation.missingKeywords : ['No major keyword gap']).map((keyword: string) => (
+                      <span key={keyword} className="px-2 py-0.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 font-mono text-[11px]">
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 text-xs">
+                <div className="font-bold text-emerald-300">Correct / Ideal Viva Answer</div>
+                <p className="mt-2 text-slate-200 leading-5">{lastEvaluation.idealAnswer}</p>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-purple-950/20 border border-purple-500/30 text-xs">
+                <div className="font-bold text-purple-300">Micro Lesson</div>
+                <p className="mt-2 text-slate-200 leading-5">{lastEvaluation.microLesson}</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

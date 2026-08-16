@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
+import { findTopicKnowledge } from './src/services/academicKnowledge';
 
 dotenv.config({ path: '.env.local' });
 dotenv.config();
@@ -77,9 +78,17 @@ app.post('/api/ai/chat', async (req, res) => {
       });
     }
 
+    const universityAnswerContract = `University answer quality contract:
+- First identify the exact topic and answer that topic directly. Do not give a generic template.
+- Use the syllabus/exam style: definition, principle, steps/derivation, diagram/table when useful, example, applications, limitations, common mistakes, and 2/5/10-mark answer cues.
+- Cover any education stream if asked: engineering, science, medicine, law, commerce, management, humanities, mathematics, competitive exams, placements, and practical projects.
+- If the prompt is ambiguous, state the most likely interpretation and answer it; ask at most one clarifying question at the end.
+- For factual uncertainty, say what must be verified instead of inventing details.`;
+
     const systemInstructions: Record<string, string> = {
       tutor: `You are Crack Skull AI Tutor - an elite, encouraging, and razor-sharp academic tutor for university students.
 Explain concepts step-by-step with intuitive analogies, structured points, visual ASCII or Markdown tables, and concrete examples. Focus on building deep conceptual understanding. Subject context: ${subject || 'General Engineering/Science'}.
+${universityAnswerContract}
 ${multilingualRule}`,
       exam: `You are Crack Skull AI Exam Mode Copilot.
 Provide concise, high-scoring exam-oriented answers structured with:
@@ -88,36 +97,47 @@ Provide concise, high-scoring exam-oriented answers structured with:
 3. Step-by-step mechanism or diagram representation in text/code
 4. Common exam trap/pitfall to avoid to get full marks.
 Subject context: ${subject || 'Academic Preparation'}.
+${universityAnswerContract}
 ${multilingualRule}`,
       beginner: `You are Crack Skull AI in 'Explain Like I'm 5 / Beginner Mode'.
 Break down complex academic theories using everyday metaphors, zero confusing jargon, and intuitive real-world comparisons.
+${universityAnswerContract}
 ${multilingualRule}`,
       coding: `You are Crack Skull AI Coding Mentor.
 Provide clean, idiomatic code with line-by-line breakdown, time/space complexity analysis (Big O), edge cases, and testing suggestions.
+${universityAnswerContract}
 ${multilingualRule}`,
       document: `You are Crack Skull AI Document Q&A Specialist.
 Answer questions strictly based on the provided document excerpts. Cite page numbers or sections whenever available. If information is not in the text, clearly state that rather than hallucinating.
+${universityAnswerContract}
 ${multilingualRule}`,
       viva: `You are a strict yet fair University Viva Examiner.
-Ask probing technical questions, evaluate the student's answer, point out missing technical keywords, and rate their technical depth.
+Ask probing technical questions, evaluate the student's answer, point out missing technical keywords, provide the ideal answer after evaluation, and teach the student from mistakes.
+${universityAnswerContract}
 ${multilingualRule}`,
       revision: `You are Crack Skull AI Rapid Revision Coach.
 Provide ultra-fast bulleted flash summaries, key formula cheat-sheets, and 3 critical memory retention anchors for last-minute review.
+${universityAnswerContract}
 ${multilingualRule}`,
       planner: `You are Crack Skull AI Study Strategy Agent.
 Create practical study timetables, break goals into time-boxed tasks, prioritize weak topics, and explain why each session matters.
+${universityAnswerContract}
 ${multilingualRule}`,
       'doubt-solver': `You are Crack Skull AI Doubt Solver.
 Diagnose exactly where the student is confused, ask one clarifying question only if required, then resolve the doubt with a minimal example and a check-your-understanding question.
+${universityAnswerContract}
 ${multilingualRule}`,
       pyq: `You are Crack Skull AI Previous-Year Question Agent.
 Predict exam angles, convert topics into likely 2-mark/5-mark/10-mark questions, and provide model answer skeletons with marking keywords.
+${universityAnswerContract}
 ${multilingualRule}`,
       interview: `You are Crack Skull AI Placement Interview Agent.
 Prepare the student for technical interviews with concise answers, follow-up questions, code traces, projects discussion, and recruiter-ready phrasing.
+${universityAnswerContract}
 ${multilingualRule}`,
       wellness: `You are Crack Skull AI Study Wellness Agent.
 Help students manage exam stress with short, practical routines, focus resets, sleep-aware planning, and non-medical wellbeing guidance. Encourage professional help for severe distress.
+${universityAnswerContract}
 ${multilingualRule}`,
     };
 
@@ -290,7 +310,7 @@ app.post('/api/ai/viva', async (req, res) => {
     const ai = getGeminiClient();
 
     if (!ai) {
-      return res.json(generateOfflineVivaResponse(action, subject, topic, currentQuestion, studentAnswer));
+      return res.json(generateOfflineVivaResponse(action, subject, topic, currentQuestion, studentAnswer, history));
     }
 
     if (action === 'generate-project-questions') {
@@ -329,14 +349,17 @@ Topic: ${topic}
 Question: "${currentQuestion}"
 Student's Answer: "${studentAnswer}"
 
-Provide a constructive evaluation and rate out of 100.
+Provide a constructive evaluation and rate out of 100. You must teach the student by showing what was missing and the correct ideal answer.
 Respond ONLY in JSON format:
 {
   "score": 85,
   "verdict": "Strong / Good / Needs Improvement / Weak",
   "strengths": ["Clear definition", "Mentioned key principles"],
   "improvements": ["Missing technical term X", "Could provide a 1-sentence example"],
+  "missingKeywords": ["keyword 1", "keyword 2"],
+  "mistakeAnalysis": "Explain exactly what was wrong or incomplete in the student's answer.",
   "idealAnswer": "Here is the ideal 3-sentence high-scoring examiner response...",
+  "microLesson": "Short lesson the student should remember next time.",
   "followUpQuestion": "Next viva question to test deeper comprehension"
 }`;
 
@@ -352,7 +375,7 @@ Respond ONLY in JSON format:
     // Default next question
     const prompt = `Subject: ${subject}, Topic: ${topic}.
 Previous conversation: ${JSON.stringify(history.slice(-3))}
-Generate the next probing viva question that a college examiner would ask.
+Generate the next probing viva question that a college examiner would ask. It must be specific to the topic and different from previous questions.
 Respond ONLY in JSON:
 {
   "question": "Question text",
@@ -369,7 +392,7 @@ Respond ONLY in JSON:
     res.json(JSON.parse(response.text || '{}'));
   } catch (error: any) {
     console.error('Viva API Error:', error);
-    res.json(generateOfflineVivaResponse(req.body.action, req.body.subject, req.body.topic, req.body.currentQuestion, req.body.studentAnswer));
+    res.json(generateOfflineVivaResponse(req.body.action, req.body.subject, req.body.topic, req.body.currentQuestion, req.body.studentAnswer, req.body.history || []));
   }
 });
 
@@ -528,6 +551,7 @@ function generateOfflineAiReply(message: string, mode: string, subject?: string,
   const cleanMsg = message.toLowerCase();
   const topic = extractTopic(message, subject);
   const modeTitle = String(mode || 'tutor').replace(/-/g, ' ');
+  const knowledge = findTopicKnowledge(message, subject);
 
   if (cleanMsg.includes('binary search') || cleanMsg.includes('search algorithm')) {
     return `### Binary Search Algorithm
@@ -703,23 +727,37 @@ Start with the weakest subtopic first. Do not read passively for the full two ho
 Answer each in 20-40 seconds. Use exact technical keywords first, then examples.`;
   }
 
-  return `### Crack Skull AI ${modeTitle} Response for: "${message.slice(0, 70)}"
+  const examTable = knowledge.keypoints.map((point, index) => `| ${index + 1} | ${point} |`).join('\n');
+  const keywords = knowledge.examKeywords.map(keyword => `\`${keyword}\``).join(', ');
+  const mistakes = knowledge.commonMistakes.map(item => `- ${item}`).join('\n');
+  const viva = knowledge.vivaQuestions.map((question, index) => `${index + 1}. ${question}`).join('\n');
+
+  return `### ${knowledge.title}
 
 ${languageNote}
 
-Here is a focused answer for **${topic}**:
+**Mode:** ${modeTitle}
+**Subject:** ${subject || 'General academics'}
 
-#### 1. Direct Explanation
-${topic} should be understood by first learning its definition, then its working steps, then one real example. For exam preparation, avoid memorizing only paragraphs; write the concept as a process.
+#### 1. Exact Definition
+${knowledge.definition}
 
-#### 2. What to Write in Exams
-* Start with a precise definition.
-* Add the core rule/formula/algorithm.
-* Include one diagram, table, or example if possible.
-* End with advantage, limitation, or application.
+#### 2. University Answer Points
+| No. | Point |
+|-----|-------|
+${examTable}
 
-#### 3. Quick Check
-If you can explain ${topic} in 60 seconds and solve one example without notes, you are ready for a short-answer exam question.
+#### 3. High-Scoring Model Answer
+${knowledge.idealAnswer}
+
+#### 4. Must-Use Exam Keywords
+${keywords}
+
+#### 5. Common Mistakes to Avoid
+${mistakes}
+
+#### 6. Viva Practice Questions
+${viva}
 
 Live Gemini is not configured on this deployment yet, so this is the improved offline academic fallback. Add \`GEMINI_API_KEY\` in Render to enable full exact AI responses.`;
 }
@@ -867,7 +905,9 @@ function generateOfflineExamRadar(subject = 'DBMS') {
   };
 }
 
-function generateOfflineVivaResponse(action: string, subject = 'DBMS', topic = 'Transactions', currentQuestion?: string, studentAnswer?: string) {
+function generateOfflineVivaResponse(action: string, subject = 'DBMS', topic = 'Transactions', currentQuestion?: string, studentAnswer?: string, history: any[] = []) {
+  const knowledge = findTopicKnowledge(topic || currentQuestion || subject, subject);
+
   if (action === 'generate-project-questions') {
     return {
       questions: [
@@ -894,23 +934,79 @@ function generateOfflineVivaResponse(action: string, subject = 'DBMS', topic = '
   }
 
   if (action === 'evaluate-answer') {
-    const wordCount = (studentAnswer || '').trim().split(/\s+/).length;
-    const isGood = wordCount > 8;
+    const answer = (studentAnswer || '').toLowerCase();
+    const requiredKeywords = getRequiredVivaKeywords(currentQuestion || topic, knowledge.examKeywords);
+    const synonymHits = getConceptSynonymHits(answer, knowledge.examKeywords);
+    const matchedKeywords = Array.from(new Set([
+      ...requiredKeywords.filter(keyword => answer.includes(keyword.toLowerCase())),
+      ...synonymHits,
+    ].filter(keyword => requiredKeywords.includes(keyword))));
+    const missingKeywords = requiredKeywords.filter(keyword => !matchedKeywords.includes(keyword)).slice(0, 5);
+    const wordCount = (studentAnswer || '').trim().split(/\s+/).filter(Boolean).length;
+    const keywordScore = Math.min(35, matchedKeywords.length * 12);
+    const depthScore = Math.min(25, Math.floor(wordCount / 2));
+    const exampleScore = /(example|real|bank|case|scenario|application|diagram|formula|because)/i.test(studentAnswer || '') ? 15 : 0;
+    const score = Math.max(35, Math.min(95, 25 + keywordScore + depthScore + exampleScore));
+
     return {
-      score: isGood ? 84 : 58,
-      verdict: isGood ? 'Good conceptual response' : 'Needs more technical depth',
-      strengths: ['Addressed the core question', 'Understands the high-level concept'],
-      improvements: ['Include exact standard terminology', 'Give a 1-sentence real-world edge case'],
-      idealAnswer: `An ideal university viva answer clearly states the formal definition, cites the primary invariant, and gives a 1-line mathematical or architectural example.`,
-      followUpQuestion: `How would this mechanism behave if a system crash occurs immediately after write buffer flush?`,
+      score,
+      verdict: score >= 80 ? 'Strong' : score >= 65 ? 'Good but incomplete' : score >= 50 ? 'Needs Improvement' : 'Weak',
+      strengths: matchedKeywords.length
+        ? [`Used relevant keyword(s): ${matchedKeywords.slice(0, 3).join(', ')}`, 'Attempted the core concept']
+        : ['Attempted an answer'],
+      improvements: [
+        missingKeywords.length ? `Add missing keyword(s): ${missingKeywords.join(', ')}` : 'Add a stronger example or limitation',
+        'Give one concrete example and one limitation',
+      ],
+      missingKeywords,
+      mistakeAnalysis: missingKeywords.length
+        ? `Your answer is incomplete because it does not clearly mention ${missingKeywords.join(', ')} for this exact question. In viva, missing standard terms reduces marks even when the general idea is correct.`
+        : 'Your answer includes the core keywords. Improve by organizing it as definition, explanation, example, and limitation.',
+      idealAnswer: knowledge.idealAnswer,
+      microLesson: `Remember: ${knowledge.definition}`,
+      followUpQuestion: knowledge.vivaQuestions[Math.min(knowledge.vivaQuestions.length - 1, Math.max(0, matchedKeywords.length % knowledge.vivaQuestions.length))],
     };
   }
 
+  const historyCount = Array.isArray(history) ? history.length : 0;
+  const questionIndex = Math.abs(((topic || subject || '').length + historyCount) % knowledge.vivaQuestions.length);
   return {
-    question: `Explain the fundamental difference between Pessimistic Locking and Optimistic Concurrency Control in ${subject}.`,
-    expectedKeypoints: ['Lock overhead vs validation phase', 'Read-heavy vs write-heavy workloads', 'Rollback rate'],
+    question: knowledge.vivaQuestions[questionIndex],
+    expectedKeypoints: knowledge.examKeywords.slice(0, 4),
+    idealAnswer: knowledge.idealAnswer,
     difficulty: 'Medium',
   };
+}
+
+function getRequiredVivaKeywords(questionOrTopic: string, fallback: string[]): string[] {
+  const text = questionOrTopic.toLowerCase();
+  if (text.includes('atomicity')) return ['Atomicity', 'rollback'];
+  if (text.includes('consistency')) return ['Consistency'];
+  if (text.includes('isolation')) return ['Isolation', 'concurrency'];
+  if (text.includes('durability')) return ['Durability', 'commit'];
+  if (text.includes('candidate')) return ['candidate key', 'closure'];
+  if (text.includes('bcnf')) return ['superkey', 'functional dependency'];
+  if (text.includes('lossless')) return ['lossless decomposition', 'functional dependency'];
+  if (text.includes('safe state')) return ['safe state'];
+  if (text.includes('deadlock')) return ['mutual exclusion', 'hold and wait', 'no preemption', 'circular wait'];
+  return fallback.slice(0, 6);
+}
+
+function getConceptSynonymHits(answer: string, keywords: string[]): string[] {
+  const synonyms: Record<string, RegExp[]> = {
+    Atomicity: [/all\s*or\s*nothing/i, /whole transaction/i],
+    Consistency: [/valid state/i, /constraints?/i, /integrity/i],
+    Isolation: [/one after another/i, /serial/i, /concurrent/i, /interfere/i],
+    Durability: [/survive/i, /persist/i, /permanent/i, /after crash/i],
+    commit: [/saved/i, /final/i],
+    rollback: [/undo/i, /revert/i, /fail/i],
+    'candidate key': [/uniquely identif/i, /minimal superkey/i],
+    closure: [/attribute closure/i],
+    superkey: [/uniquely identif/i],
+    'safe state': [/safe sequence/i],
+  };
+
+  return keywords.filter(keyword => synonyms[keyword]?.some(pattern => pattern.test(answer)));
 }
 
 function generateOfflineDocAnalysis(title: string, subject = 'DBMS') {
