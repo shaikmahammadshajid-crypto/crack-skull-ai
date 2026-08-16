@@ -266,8 +266,9 @@ Generate Quiz       Track Progress
 # 🌐 Live Demo & Repository
 
 - 💻 **GitHub Repository**: [https://github.com/shaikmahammadshajid-crypto/crack-skull-ai](https://github.com/shaikmahammadshajid-crypto/crack-skull-ai)
+- 🌍 **Live Render App**: [https://crack-skull-ai.onrender.com](https://crack-skull-ai.onrender.com)
 - 🧪 **Local Development URL**: `http://localhost:3000`
-- 🚀 **Render Deployment**: This repository includes `render.yaml` for Blueprint deployment. Connect this GitHub repo in Render, set `GEMINI_API_KEY`, and Render will build with `npm install && npm run build` and start with `npm start`.
+- 🚀 **Render Deployment**: This repository includes `render.yaml` for Blueprint deployment. Set `GEMINI_API_KEY` in Render environment variables to enable live Gemini responses.
 
 ---
 
