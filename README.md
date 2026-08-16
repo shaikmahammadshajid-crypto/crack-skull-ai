@@ -177,7 +177,7 @@ Create a `.env.local` file in the root directory:
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
 NVIDIA_API_KEY=your_nvidia_api_key_here
-NVIDIA_MODEL=meta/llama-3.1-405b-instruct
+NVIDIA_MODEL=meta/llama-3.1-8b-instruct
 ```
 
 You can also use the included example file:
