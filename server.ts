@@ -15,6 +15,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const NVIDIA_BASE_URL = process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
+const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.1-405b-instruct';
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -35,12 +37,75 @@ function getGeminiClient(): GoogleGenAI | null {
   });
 }
 
+async function callNvidiaChat(params: {
+  system?: string;
+  prompt: string;
+  temperature?: number;
+  maxTokens?: number;
+}): Promise<string | null> {
+  const apiKey = process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const response = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: NVIDIA_MODEL,
+        messages: [
+          ...(params.system ? [{ role: 'system', content: params.system }] : []),
+          { role: 'user', content: params.prompt },
+        ],
+        temperature: params.temperature ?? 0.25,
+        top_p: 0.9,
+        max_tokens: params.maxTokens ?? 2200,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      console.warn(`NVIDIA API returned ${response.status}: ${errorText.slice(0, 300)}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || null;
+  } catch (error) {
+    console.warn('NVIDIA API unavailable, falling back:', error);
+    return null;
+  }
+}
+
+function parseJsonFromText<T = any>(text: string | null | undefined, fallback: T): T {
+  if (!text) return fallback;
+  try {
+    return JSON.parse(text);
+  } catch {
+    const match = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+    if (match?.[1]) {
+      try {
+        return JSON.parse(match[1]);
+      } catch {
+        return fallback;
+      }
+    }
+    return fallback;
+  }
+}
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     appName: 'Crack Skull AI',
     version: '1.0.0',
+    aiProvider: process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY ? 'nvidia' : process.env.GEMINI_API_KEY ? 'gemini' : 'offline',
+    hasNvidiaKey: !!(process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY),
     hasApiKey: !!process.env.GEMINI_API_KEY,
   });
 });
@@ -69,14 +134,6 @@ app.post('/api/ai/chat', async (req, res) => {
     const ai = getGeminiClient();
     const responseLanguage = languageNames[language] || languageNames.auto;
     const multilingualRule = `Always answer in ${responseLanguage}. Preserve technical terms in English when they are standard exam or programming vocabulary, and add simple local-language explanations beside them when useful.`;
-
-    if (!ai) {
-      return res.json({
-        reply: generateOfflineAiReply(message, mode, subject, responseLanguage),
-        mode,
-        isFallback: true,
-      });
-    }
 
     const universityAnswerContract = `University answer quality contract:
 - First identify the exact topic and answer that topic directly. Do not give a generic template.
@@ -153,6 +210,26 @@ Student question/prompt: ${message}
 
 Provide a comprehensive, beautifully formatted Markdown response with clear headers, bold emphasis, code blocks or tables where appropriate.`;
 
+    const nvidiaReply = await callNvidiaChat({
+      system: chosenSystemInstruction,
+      prompt,
+      temperature: 0.2,
+      maxTokens: 2600,
+    });
+
+    if (nvidiaReply) {
+      return res.json({ reply: nvidiaReply, mode, isFallback: false, provider: 'nvidia' });
+    }
+
+    if (!ai) {
+      return res.json({
+        reply: generateOfflineAiReply(message, mode, subject, responseLanguage),
+        mode,
+        isFallback: true,
+        provider: 'offline',
+      });
+    }
+
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: prompt,
@@ -163,7 +240,7 @@ Provide a comprehensive, beautifully formatted Markdown response with clear head
     });
 
     const reply = response.text || 'Unable to generate response. Please try again.';
-    res.json({ reply, mode, isFallback: false });
+    res.json({ reply, mode, isFallback: false, provider: 'gemini' });
   } catch (error: any) {
     console.error('Chat API Error:', error);
     res.status(500).json({
@@ -179,13 +256,6 @@ app.post('/api/ai/quiz', async (req, res) => {
   try {
     const { subject, topic, difficulty, count = 5, questionTypes = ['mcq'] } = req.body;
     const ai = getGeminiClient();
-
-    if (!ai) {
-      return res.json({
-        quiz: generateOfflineQuiz(subject, topic, difficulty, count),
-        isFallback: true,
-      });
-    }
 
     const prompt = `Generate an exam-grade quiz for subject: "${subject}", topic: "${topic}".
 Difficulty: ${difficulty} (easy, medium, hard, adaptive).
@@ -207,6 +277,24 @@ Respond ONLY with a valid JSON array of objects with the following schema:
   }
 ]`;
 
+    const nvidiaQuizText = await callNvidiaChat({
+      system: 'You generate strict valid JSON only. No markdown. No explanation outside JSON.',
+      prompt,
+      temperature: 0.2,
+      maxTokens: 2600,
+    });
+    if (nvidiaQuizText) {
+      return res.json({ quiz: parseJsonFromText(nvidiaQuizText, generateOfflineQuiz(subject, topic, difficulty, count)), isFallback: false, provider: 'nvidia' });
+    }
+
+    if (!ai) {
+      return res.json({
+        quiz: generateOfflineQuiz(subject, topic, difficulty, count),
+        isFallback: true,
+        provider: 'offline',
+      });
+    }
+
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: prompt,
@@ -223,7 +311,7 @@ Respond ONLY with a valid JSON array of objects with the following schema:
       quizData = generateOfflineQuiz(subject, topic, difficulty, count);
     }
 
-    res.json({ quiz: quizData, isFallback: false });
+    res.json({ quiz: quizData, isFallback: false, provider: 'gemini' });
   } catch (error: any) {
     console.error('Quiz API Error:', error);
     res.json({
@@ -238,13 +326,6 @@ app.post('/api/ai/exam-radar', async (req, res) => {
   try {
     const { subject, paperText, yearCount = 5 } = req.body;
     const ai = getGeminiClient();
-
-    if (!ai) {
-      return res.json({
-        radarData: generateOfflineExamRadar(subject),
-        isFallback: true,
-      });
-    }
 
     const prompt = `Analyze historical university exam papers for subject: "${subject}".
 Context / Paper sample text: "${paperText ? paperText.slice(0, 3000) : 'Standard University Semester Exam pattern'}".
@@ -277,6 +358,24 @@ Return ONLY valid JSON matching this schema:
   "expertAdvice": "Focus 60% of your initial study time on Unit 2 & 3 as they account for over 50 marks."
 }`;
 
+    const nvidiaRadarText = await callNvidiaChat({
+      system: 'You are an exam-paper analysis engine. Return strict valid JSON only.',
+      prompt,
+      temperature: 0.15,
+      maxTokens: 2600,
+    });
+    if (nvidiaRadarText) {
+      return res.json({ radarData: parseJsonFromText(nvidiaRadarText, generateOfflineExamRadar(subject)), isFallback: false, provider: 'nvidia' });
+    }
+
+    if (!ai) {
+      return res.json({
+        radarData: generateOfflineExamRadar(subject),
+        isFallback: true,
+        provider: 'offline',
+      });
+    }
+
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: prompt,
@@ -293,7 +392,7 @@ Return ONLY valid JSON matching this schema:
       radarData = generateOfflineExamRadar(subject);
     }
 
-    res.json({ radarData, isFallback: false });
+    res.json({ radarData, isFallback: false, provider: 'gemini' });
   } catch (error: any) {
     console.error('Exam Radar API Error:', error);
     res.json({
@@ -308,10 +407,6 @@ app.post('/api/ai/viva', async (req, res) => {
   try {
     const { action, subject, topic, projectDetails, currentQuestion, studentAnswer, history = [] } = req.body;
     const ai = getGeminiClient();
-
-    if (!ai) {
-      return res.json(generateOfflineVivaResponse(action, subject, topic, currentQuestion, studentAnswer, history));
-    }
 
     if (action === 'generate-project-questions') {
       const prompt = `You are a senior University Project Viva Examiner panel.
@@ -332,6 +427,20 @@ Respond ONLY with JSON:
     }
   ]
 }`;
+
+      const nvidiaProjectText = await callNvidiaChat({
+        system: 'Return strict valid JSON only for university project viva questions.',
+        prompt,
+        temperature: 0.25,
+        maxTokens: 2200,
+      });
+      if (nvidiaProjectText) {
+        return res.json({ ...parseJsonFromText(nvidiaProjectText, { questions: [] }), provider: 'nvidia' });
+      }
+
+      if (!ai) {
+        return res.json({ ...generateOfflineVivaResponse(action, subject, topic, currentQuestion, studentAnswer, history), provider: 'offline' });
+      }
 
       const response = await ai.models.generateContent({
         model: GEMINI_MODEL,
@@ -363,6 +472,20 @@ Respond ONLY in JSON format:
   "followUpQuestion": "Next viva question to test deeper comprehension"
 }`;
 
+      const nvidiaEvalText = await callNvidiaChat({
+        system: 'You are a strict university viva examiner. Return strict valid JSON only.',
+        prompt,
+        temperature: 0.1,
+        maxTokens: 2200,
+      });
+      if (nvidiaEvalText) {
+        return res.json({ ...parseJsonFromText(nvidiaEvalText, generateOfflineVivaResponse(action, subject, topic, currentQuestion, studentAnswer, history)), provider: 'nvidia' });
+      }
+
+      if (!ai) {
+        return res.json({ ...generateOfflineVivaResponse(action, subject, topic, currentQuestion, studentAnswer, history), provider: 'offline' });
+      }
+
       const response = await ai.models.generateContent({
         model: GEMINI_MODEL,
         contents: prompt,
@@ -383,6 +506,20 @@ Respond ONLY in JSON:
   "difficulty": "Medium"
 }`;
 
+    const nvidiaQuestionText = await callNvidiaChat({
+      system: 'You generate strict valid JSON only for university viva questions.',
+      prompt,
+      temperature: 0.35,
+      maxTokens: 1000,
+    });
+    if (nvidiaQuestionText) {
+      return res.json({ ...parseJsonFromText(nvidiaQuestionText, generateOfflineVivaResponse(action, subject, topic, currentQuestion, studentAnswer, history)), provider: 'nvidia' });
+    }
+
+    if (!ai) {
+      return res.json({ ...generateOfflineVivaResponse(action, subject, topic, currentQuestion, studentAnswer, history), provider: 'offline' });
+    }
+
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: prompt,
@@ -401,13 +538,6 @@ app.post('/api/ai/document-analyze', async (req, res) => {
   try {
     const { title, textSnippet, subject } = req.body;
     const ai = getGeminiClient();
-
-    if (!ai) {
-      return res.json({
-        analysis: generateOfflineDocAnalysis(title, subject),
-        isFallback: true,
-      });
-    }
 
     const prompt = `Analyze this academic document/notes/PDF titled "${title}" for subject "${subject}".
 Content preview: "${(textSnippet || '').slice(0, 4000)}"
@@ -438,6 +568,28 @@ Respond ONLY with JSON:
   ]
 }`;
 
+    const nvidiaDocText = await callNvidiaChat({
+      system: 'You are an academic document analysis engine. Return strict valid JSON only.',
+      prompt,
+      temperature: 0.15,
+      maxTokens: 3000,
+    });
+    if (nvidiaDocText) {
+      return res.json({
+        analysis: parseJsonFromText(nvidiaDocText, generateOfflineDocAnalysis(title, subject)),
+        isFallback: false,
+        provider: 'nvidia',
+      });
+    }
+
+    if (!ai) {
+      return res.json({
+        analysis: generateOfflineDocAnalysis(title, subject),
+        isFallback: true,
+        provider: 'offline',
+      });
+    }
+
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: prompt,
@@ -447,6 +599,7 @@ Respond ONLY with JSON:
     res.json({
       analysis: JSON.parse(response.text || '{}'),
       isFallback: false,
+      provider: 'gemini',
     });
   } catch (error: any) {
     console.error('Document Analyze API Error:', error);
@@ -462,13 +615,6 @@ app.post('/api/ai/study-plan', async (req, res) => {
   try {
     const { subjects, examDaysLeft, dailyHours, isCrackMode, weakTopics = [] } = req.body;
     const ai = getGeminiClient();
-
-    if (!ai) {
-      return res.json({
-        plan: generateOfflineStudyPlan(subjects, examDaysLeft, dailyHours, isCrackMode, weakTopics),
-        isFallback: true,
-      });
-    }
 
     const prompt = `Create an optimized academic study plan.
 Subjects: ${JSON.stringify(subjects)}
@@ -523,6 +669,28 @@ Respond ONLY with valid JSON:
   "crackTip": "Spend your first 30 minutes solving 10-mark long questions before taking MCQs."
 }`;
 
+    const nvidiaPlanText = await callNvidiaChat({
+      system: 'You are an academic planning engine. Return strict valid JSON only.',
+      prompt,
+      temperature: 0.2,
+      maxTokens: 2600,
+    });
+    if (nvidiaPlanText) {
+      return res.json({
+        plan: parseJsonFromText(nvidiaPlanText, generateOfflineStudyPlan(subjects, examDaysLeft, dailyHours, isCrackMode, weakTopics)),
+        isFallback: false,
+        provider: 'nvidia',
+      });
+    }
+
+    if (!ai) {
+      return res.json({
+        plan: generateOfflineStudyPlan(subjects, examDaysLeft, dailyHours, isCrackMode, weakTopics),
+        isFallback: true,
+        provider: 'offline',
+      });
+    }
+
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: prompt,
@@ -532,6 +700,7 @@ Respond ONLY with valid JSON:
     res.json({
       plan: JSON.parse(response.text || '{}'),
       isFallback: false,
+      provider: 'gemini',
     });
   } catch (error: any) {
     console.error('Study Plan API Error:', error);

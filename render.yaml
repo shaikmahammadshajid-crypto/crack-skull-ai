@@ -12,3 +12,9 @@ services:
         value: gemini-2.5-flash
       - key: GEMINI_API_KEY
         sync: false
+      - key: NVIDIA_MODEL
+        value: meta/llama-3.1-405b-instruct
+      - key: NVIDIA_BASE_URL
+        value: https://integrate.api.nvidia.com/v1
+      - key: NVIDIA_API_KEY
+        sync: false

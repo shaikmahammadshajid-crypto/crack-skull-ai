@@ -176,6 +176,8 @@ Create a `.env.local` file in the root directory:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
+NVIDIA_API_KEY=your_nvidia_api_key_here
+NVIDIA_MODEL=meta/llama-3.1-405b-instruct
 ```
 
 You can also use the included example file:
@@ -268,7 +270,7 @@ Generate Quiz       Track Progress
 - 💻 **GitHub Repository**: [https://github.com/shaikmahammadshajid-crypto/crack-skull-ai](https://github.com/shaikmahammadshajid-crypto/crack-skull-ai)
 - 🌍 **Live Render App**: [https://crack-skull-ai.onrender.com](https://crack-skull-ai.onrender.com)
 - 🧪 **Local Development URL**: `http://localhost:3000`
-- 🚀 **Render Deployment**: This repository includes `render.yaml` for Blueprint deployment. Set `GEMINI_API_KEY` in Render environment variables to enable live Gemini responses.
+- 🚀 **Render Deployment**: This repository includes `render.yaml` for Blueprint deployment. Set `NVIDIA_API_KEY` in Render environment variables to enable the primary NVIDIA NIM AI provider. `GEMINI_API_KEY` is optional fallback.
 
 ---
 
