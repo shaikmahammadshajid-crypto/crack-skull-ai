@@ -74,10 +74,13 @@ export interface DocumentItem {
   fileSize: string;
   pageCount: number;
   uploadDate: string;
+  uploadedAt?: string;
   extractedTextPreview?: string;
+  rawContent?: string;
   summary?: string;
   keyFormulas?: { term: string; definition: string; importance: string }[];
   coreConcepts?: { name: string; description: string; pageReference: string }[];
+  keyConcepts?: string[];
   predictedExamQuestions?: { question: string; marks: number; frequencyProb: string }[];
   tags: string[];
   isAnalyzed: boolean;

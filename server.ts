@@ -526,6 +526,9 @@ function generateOfflineAiReply(message: string, mode: string, subject?: string,
     : `Preferred response language: ${responseLanguage}. Offline answers are limited, but the online Gemini assistant will fully respond in this language.`;
 
   const cleanMsg = message.toLowerCase();
+  const topic = extractTopic(message, subject);
+  const modeTitle = String(mode || 'tutor').replace(/-/g, ' ');
+
   if (cleanMsg.includes('binary search') || cleanMsg.includes('search algorithm')) {
     return `### Binary Search Algorithm
 
@@ -571,27 +574,162 @@ function binarySearch(arr: number[], target: number): number {
 * **Overflow Prevention**: Always use \`low + (high - low) / 2\` instead of \`(low + high) / 2\` in languages like Java/C++.`;
   }
 
-  return `### Crack Skull AI Insights for: "${message.slice(0, 60)}"
+  if (cleanMsg.includes('acid') || cleanMsg.includes('transaction')) {
+    return `${languageNote}
+
+### ACID Properties in DBMS
+
+**Atomicity**: A transaction is all-or-nothing. If one step fails, the whole transaction rolls back.
+
+**Consistency**: A transaction must move the database from one valid state to another valid state without breaking constraints.
+
+**Isolation**: Concurrent transactions should behave as if they ran one after another.
+
+**Durability**: Once committed, data survives crashes using logs or stable storage.
+
+**Exam answer structure**:
+1. Define ACID.
+2. Explain each property in 2-3 lines.
+3. Use a bank transfer example.
+4. Mention rollback, commit, concurrency, and recovery keywords.
+
+**Real-life example**: When A sends money to B, debit and credit must both happen. If the app crashes after debit but before credit, Atomicity rolls back the debit.`;
+  }
+
+  if (cleanMsg.includes('normalization') || cleanMsg.includes('bcnf') || cleanMsg.includes('3nf')) {
+    return `${languageNote}
+
+### Database Normalization
+
+Normalization organizes tables to reduce duplicate data and avoid update, insert, and delete anomalies.
+
+| Form | Main Rule | Exam Focus |
+|------|-----------|------------|
+| 1NF | Atomic values only | No repeating groups |
+| 2NF | No partial dependency | Applies when key is composite |
+| 3NF | No transitive dependency | Non-key should not depend on non-key |
+| BCNF | Every determinant is a superkey | Stronger than 3NF |
+
+**How to solve exam problems**:
+1. List functional dependencies.
+2. Find candidate keys using closure.
+3. Check each normal form rule.
+4. Decompose only when a dependency violates the target normal form.`;
+  }
+
+  if (cleanMsg.includes('2pl') || cleanMsg.includes('two phase locking') || cleanMsg.includes('serializable')) {
+    return `${languageNote}
+
+### Two-Phase Locking (2PL)
+
+2PL is a concurrency-control protocol that guarantees conflict serializability.
+
+**Phases**:
+1. Growing phase: transaction can acquire locks but cannot release locks.
+2. Shrinking phase: transaction can release locks but cannot acquire new locks.
+
+**Strict 2PL** holds exclusive locks until commit/abort, preventing cascading rollbacks.
+
+**Common viva question**: Does 2PL prevent deadlock? No. It guarantees serializability, but deadlocks can still occur.`;
+  }
+
+  if (cleanMsg.includes('deadlock')) {
+    return `${languageNote}
+
+### Deadlock
+
+A deadlock happens when processes wait forever because each process holds a resource needed by another process.
+
+**Four necessary conditions**:
+1. Mutual exclusion
+2. Hold and wait
+3. No preemption
+4. Circular wait
+
+**Handling methods**: prevention, avoidance using Banker algorithm, detection and recovery.
+
+**Exam tip**: For Banker algorithm, always show Available, Need, Allocation, and the safe sequence.`;
+  }
+
+  if (String(mode).includes('planner') || cleanMsg.includes('plan') || cleanMsg.includes('schedule')) {
+    const planTopic = subject || topic;
+    return `${languageNote}
+
+### 2-Hour Study Plan for ${planTopic}
+
+| Time | Task | Output |
+|------|------|--------|
+| 0-25 min | Learn core theory of ${planTopic} | 1-page notes |
+| 25-30 min | Break | Reset focus |
+| 30-55 min | Solve 3 examples/PYQs | Mark weak points |
+| 55-65 min | Break | No phone scrolling |
+| 65-95 min | Make flashcards/formulas | 10 recall cards |
+| 95-115 min | Quick quiz | Check accuracy |
+| 115-120 min | Final recap | List next doubts |
+
+Start with the weakest subtopic first. Do not read passively for the full two hours.`;
+  }
+
+  if (String(mode).includes('pyq') || cleanMsg.includes('previous') || cleanMsg.includes('question')) {
+    return `${languageNote}
+
+### Likely PYQ Angles for ${topic}
+
+**2-mark questions**:
+- Define ${topic}.
+- State two advantages and two limitations.
+
+**5-mark questions**:
+- Explain ${topic} with a neat example.
+- Differentiate ${topic} from the related alternative.
+
+**10-mark questions**:
+- Explain the full working of ${topic}, draw the diagram/table if applicable, and discuss edge cases.
+
+**Answer skeleton**: Definition -> diagram/table -> steps -> example -> exam keyword conclusion.`;
+  }
+
+  if (String(mode).includes('viva') || cleanMsg.includes('viva')) {
+    return `${languageNote}
+
+### Viva Practice: ${topic}
+
+1. What is ${topic} in one sentence?
+2. Why is it needed in real systems?
+3. What is one limitation or failure case?
+4. Can you give a practical example?
+5. How would you compare it with a related concept?
+
+Answer each in 20-40 seconds. Use exact technical keywords first, then examples.`;
+  }
+
+  return `### Crack Skull AI ${modeTitle} Response for: "${message.slice(0, 70)}"
 
 ${languageNote}
 
-Here is the strategic academic breakdown for **${subject || 'Computer Science & Engineering'}**:
+Here is a focused answer for **${topic}**:
 
-#### 1. Core Definition & Principle
-* The fundamental concept revolves around optimizing computation and ensuring mathematical consistency.
-* Understanding this topic is critical for both university semester examinations (typically worth **8–12 marks**) and technical job interviews.
+#### 1. Direct Explanation
+${topic} should be understood by first learning its definition, then its working steps, then one real example. For exam preparation, avoid memorizing only paragraphs; write the concept as a process.
 
-#### 2. Key Takeaways & Architecture
-* **Component A**: Handles state initialization and boundary conditions.
-* **Component B**: Manages the iterative transition logic with minimal runtime overhead.
-* **Invariant**: Guarantees that at every iteration step, the system integrity remains preserved.
+#### 2. What to Write in Exams
+* Start with a precise definition.
+* Add the core rule/formula/algorithm.
+* Include one diagram, table, or example if possible.
+* End with advantage, limitation, or application.
 
-#### 3. Strategic Exam Preparation Checklist
-* ✅ Master the formal definition and standard diagram representation.
-* ✅ Memorize the primary time and space complexities.
-* ✅ Practice at least 2 numerical or code tracing examples from previous question papers.
+#### 3. Quick Check
+If you can explain ${topic} in 60 seconds and solve one example without notes, you are ready for a short-answer exam question.
 
-*Would you like me to generate a 5-question quick quiz or run a simulated Viva on this topic?*`;
+Live Gemini is not configured on this deployment yet, so this is the improved offline academic fallback. Add \`GEMINI_API_KEY\` in Render to enable full exact AI responses.`;
+}
+
+function extractTopic(message: string, subject?: string): string {
+  const cleaned = message
+    .replace(/^(explain|what is|define|describe|give|make|create|tell me|how to|please)\s+/i, '')
+    .replace(/\?+$/g, '')
+    .trim();
+  return cleaned || subject || 'the selected topic';
 }
 
 function generateOfflineQuiz(subject = 'DBMS', topic = 'Transactions & ACID', difficulty = 'Medium', count = 5) {

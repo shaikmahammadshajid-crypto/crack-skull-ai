@@ -94,3 +94,44 @@
   border: 1px solid #262B38;
 }
 
+/* Compatibility layer for older screens that were originally authored dark-only. */
+.light [class*="bg-slate-950"],
+.light [class*="bg-slate-900"],
+.light [class*="bg-\\[\\#0E1322\\]"],
+.light [class*="bg-\\[\\#0A0D18\\]"],
+.light [class*="bg-\\[\\#111520\\]"],
+.light [class*="bg-\\[\\#171D2A\\]"] {
+  background-color: #FFFFFF !important;
+}
+
+.light [class*="bg-slate-800"] {
+  background-color: #F3F4F6 !important;
+}
+
+.light [class*="border-slate-800"],
+.light [class*="border-gray-800"] {
+  border-color: #E5E7EB !important;
+}
+
+.light [class*="text-white"],
+.light [class*="text-slate-100"],
+.light [class*="text-slate-200"],
+.light [class*="text-slate-300"] {
+  color: #111827 !important;
+}
+
+.light [class*="text-slate-400"],
+.light [class*="text-slate-500"] {
+  color: #6B7280 !important;
+}
+
+.light input,
+.light textarea,
+.light select {
+  color: #111827;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #9CA3AF;
+}

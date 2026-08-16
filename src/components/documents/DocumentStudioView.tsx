@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { aiService } from '../../services/aiService';
+import { extractConceptTags, extractTextFromFile, formatFileSize } from '../../services/pdfService';
 import { DocumentItem } from '../../types';
 import {
   FileText,
@@ -41,6 +42,8 @@ export const DocumentStudioView: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedTitle, setUploadedTitle] = useState('');
   const [uploadedSubject, setUploadedSubject] = useState(activeSubject?.name || 'Database Management Systems');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState('');
   const [selectedText, setSelectedText] = useState('');
   const [aiSidebarReply, setAiSidebarReply] = useState('');
   const [isAiProcessing, setIsAiProcessing] = useState(false);
@@ -48,39 +51,67 @@ export const DocumentStudioView: React.FC = () => {
   const filteredDocs = documents.filter(d => {
     const matchesSearch = d.title.toLowerCase().includes(searchQuery.toLowerCase()) || d.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
     if (activeTab === 'all') return matchesSearch;
-    if (activeTab === 'books') return matchesSearch && d.type === 'book';
+    if (activeTab === 'books') return matchesSearch && d.type === 'textbook';
     if (activeTab === 'notes') return matchesSearch && d.type === 'notes';
-    if (activeTab === 'pyq') return matchesSearch && d.type === 'past_paper';
+    if (activeTab === 'pyq') return matchesSearch && d.type === 'pyq';
     return matchesSearch;
   });
 
-  const handleSimulateUpload = (e: React.FormEvent) => {
+  const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadedTitle.trim()) return;
+    if (!selectedFile) {
+      setUploadError('Choose a PDF, TXT, or Markdown file first.');
+      return;
+    }
 
     setIsUploading(true);
-    setTimeout(() => {
+    setUploadError('');
+
+    try {
+      const extracted = await extractTextFromFile(selectedFile);
+      const title = uploadedTitle.trim() || selectedFile.name;
+      const rawText = extracted.text || `No selectable text was found in ${selectedFile.name}. This may be a scanned/image-only PDF.`;
+      const keyConcepts = extractConceptTags(rawText, uploadedSubject);
+      const analysis = rawText.length > 40
+        ? await aiService.analyzeDocument({
+          title,
+          subject: uploadedSubject,
+          textSnippet: rawText.slice(0, 6000),
+        })
+        : null;
+
       const newDoc: DocumentItem = {
         id: `doc_${Date.now()}`,
-        title: uploadedTitle,
+        title,
         subjectId: activeSubject?.id || 'sub_gen',
         subjectName: uploadedSubject,
-        type: 'notes',
-        fileSize: '4.2 MB',
-        pageCount: 38,
+        type: selectedFile.name.toLowerCase().includes('question') || selectedFile.name.toLowerCase().includes('pyq') ? 'pyq' : 'pdf',
+        fileSize: formatFileSize(selectedFile.size),
+        pageCount: extracted.pageCount,
         uploadDate: 'Just now',
-        summary: `Comprehensive academic document on ${uploadedTitle}. Key concepts indexed for semantic search and instant quiz generation.`,
-        tags: ['Core Fundamentals', 'Solved Proofs', 'Important Derivations', 'Summary Formulas'],
+        uploadedAt: 'Just now',
+        summary: analysis?.summary || `Indexed ${title}. The document is ready for explanation, doubt solving, flashcards, and quiz generation from its extracted text.`,
+        tags: keyConcepts,
         isBookmarked: false,
         isAnalyzed: true,
-        extractedTextPreview: `CHAPTER 1: Introduction to ${uploadedTitle}\n1.1 Fundamental Principles\nThe core architecture is built upon formal mathematical foundations, ensuring high availability, strict consistency, and fault tolerance.`,
+        extractedTextPreview: rawText.slice(0, 900),
+        rawContent: rawText,
+        keyConcepts,
+        coreConcepts: analysis?.coreConcepts,
+        keyFormulas: analysis?.keyFormulasDefinitions,
+        predictedExamQuestions: analysis?.predictedExamQuestions,
       };
 
       addDocument(newDoc);
-      setIsUploading(false);
       setUploadedTitle('');
+      setSelectedFile(null);
       triggerConfetti();
-    }, 1200);
+    } catch (error: any) {
+      console.error(error);
+      setUploadError(error.message || 'Unable to read this file. Try another PDF or a text-based document.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleTextSelection = () => {
@@ -91,7 +122,7 @@ export const DocumentStudioView: React.FC = () => {
   };
 
   const handleAiAction = async (action: 'explain' | 'quiz' | 'flashcard') => {
-    const textToAnalyze = selectedText || selectedDocForReader?.rawContent?.slice(0, 500) || '';
+    const textToAnalyze = selectedText || selectedDocForReader?.rawContent?.slice(0, 2000) || selectedDocForReader?.extractedTextPreview || '';
     if (!textToAnalyze) return;
 
     setIsAiProcessing(true);
@@ -292,7 +323,7 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
                 Key Topics Indexed in this PDF:
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {selectedDocForReader.keyConcepts.map((kc, i) => (
+                {(selectedDocForReader.keyConcepts || selectedDocForReader.tags || []).map((kc, i) => (
                   <span
                     key={i}
                     onClick={() => openExplainModal(kc, selectedDocForReader.subjectName, selectedDocForReader.title)}
@@ -336,8 +367,24 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
           <span>Upload New Academic Document / Past Paper</span>
         </h3>
 
-        <form onSubmit={handleSimulateUpload} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-          <div className="sm:col-span-6">
+        <form onSubmit={handleUpload} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div className="sm:col-span-4">
+            <label className="flex items-center justify-center w-full h-full min-h-[42px] cursor-pointer rounded-xl border border-dashed border-cyan-700/60 bg-slate-950 px-3 py-2 text-xs text-cyan-200 hover:border-cyan-400">
+              <input
+                type="file"
+                accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
+                className="hidden"
+                onChange={event => {
+                  const file = event.target.files?.[0] || null;
+                  setSelectedFile(file);
+                  if (file && !uploadedTitle.trim()) setUploadedTitle(file.name);
+                }}
+              />
+              <span className="truncate">{selectedFile ? selectedFile.name : 'Choose PDF / TXT / MD'}</span>
+            </label>
+          </div>
+
+          <div className="sm:col-span-4">
             <input
               type="text"
               placeholder="Document Title (e.g. Unit 3 - Transactions & Locking Notes.pdf)"
@@ -347,7 +394,7 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
             />
           </div>
 
-          <div className="sm:col-span-4">
+          <div className="sm:col-span-2">
             <input
               type="text"
               placeholder="Subject (e.g. Database Management Systems)"
@@ -360,13 +407,18 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
           <div className="sm:col-span-2">
             <button
               type="submit"
-              disabled={isUploading || !uploadedTitle.trim()}
+              disabled={isUploading || !selectedFile}
               className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs shadow-md shadow-cyan-600/30 flex items-center justify-center gap-1.5 disabled:opacity-50 transition-all"
             >
               <Upload size={14} />
               <span>{isUploading ? 'Indexing...' : 'Upload PDF'}</span>
             </button>
           </div>
+          {uploadError && (
+            <div className="sm:col-span-12 rounded-xl border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-200">
+              {uploadError}
+            </div>
+          )}
         </form>
       </div>
 

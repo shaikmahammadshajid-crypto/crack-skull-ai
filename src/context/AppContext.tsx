@@ -146,7 +146,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation & Theme
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => storageService.getTheme());
 
   // Auth
   const [isAuthenticated, setIsAuthenticatedState] = useState<boolean>(() => storageService.getAuthState());
@@ -210,7 +210,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [theme]);
 
   const toggleTheme = useCallback(() => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      storageService.saveTheme(next);
+      return next;
+    });
   }, []);
 
   // Recalculate Crack Score

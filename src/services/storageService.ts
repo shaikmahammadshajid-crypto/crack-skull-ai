@@ -84,6 +84,24 @@ export const storageService = {
     }
   },
 
+  getTheme(): 'dark' | 'light' {
+    try {
+      const stored = localStorage.getItem(KEYS.THEME);
+      if (stored === 'dark' || stored === 'light') return stored;
+      return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    } catch {
+      return 'dark';
+    }
+  },
+
+  saveTheme(theme: 'dark' | 'light') {
+    try {
+      localStorage.setItem(KEYS.THEME, theme);
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
   // User Profile
   getUser(): UserProfile {
     try {

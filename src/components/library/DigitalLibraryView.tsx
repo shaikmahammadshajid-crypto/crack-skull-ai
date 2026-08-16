@@ -1,22 +1,33 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { LibraryResource } from '../../types';
 import {
   BookOpen,
   Search,
   Bookmark,
   ExternalLink,
   Sparkles,
-  Download,
-  FileText,
-  HelpCircle,
+  Globe2,
+  Loader2,
 } from 'lucide-react';
+
+interface OpenLibraryBook {
+  key: string;
+  title: string;
+  author_name?: string[];
+  first_publish_year?: number;
+  subject?: string[];
+  edition_count?: number;
+  cover_i?: number;
+}
 
 export const DigitalLibraryView: React.FC = () => {
   const { libraryResources, toggleBookmarkResource, openExplainModal, triggerConfetti } = useApp();
 
   const [activeCategory, setActiveCategory] = useState<'all' | 'textbook' | 'cheat_sheet' | 'notes' | 'pyq_archive'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [onlineBooks, setOnlineBooks] = useState<OpenLibraryBook[]>([]);
+  const [isSearchingOnline, setIsSearchingOnline] = useState(false);
+  const [onlineError, setOnlineError] = useState('');
 
   const filteredResources = libraryResources.filter(r => {
     const matchesSearch =
@@ -27,6 +38,32 @@ export const DigitalLibraryView: React.FC = () => {
     if (activeCategory === 'all') return matchesSearch;
     return matchesSearch && r.category === activeCategory;
   });
+
+  const topicSuggestions = useMemo(
+    () => ['DBMS normalization', 'operating system paging', 'data structures algorithms', 'machine learning', 'computer networks', 'software engineering'],
+    []
+  );
+
+  const searchOpenLibrary = async (query = searchQuery) => {
+    const cleanQuery = query.trim();
+    if (!cleanQuery) return;
+
+    setIsSearchingOnline(true);
+    setOnlineError('');
+
+    try {
+      const response = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(cleanQuery)}&limit=18&fields=key,title,author_name,first_publish_year,subject,edition_count,cover_i`);
+      if (!response.ok) throw new Error(`Open Library returned ${response.status}`);
+      const data = await response.json();
+      setOnlineBooks(data.docs || []);
+      triggerConfetti();
+    } catch (error) {
+      console.error(error);
+      setOnlineError('Could not reach Open Library right now. Try again in a moment.');
+    } finally {
+      setIsSearchingOnline(false);
+    }
+  };
 
   return (
     <div className="space-y-6 pb-16 max-w-6xl mx-auto">
@@ -41,8 +78,8 @@ export const DigitalLibraryView: React.FC = () => {
               Open Academic Digital Library
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300">
-            Open-source university textbooks, formula cheat sheets, and verified solved past papers curated for your semester.
+          <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-300">
+            Search local academic resources plus Open Library's global book catalog for textbooks, topics, authors, and doubt-solving references.
           </p>
         </div>
       </div>
@@ -88,13 +125,129 @@ export const DigitalLibraryView: React.FC = () => {
           <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Search books, authors, topics..."
+            placeholder="Search local + online books, topics..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') searchOpenLibrary();
+            }}
             className="bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-teal-500"
           />
         </div>
       </div>
+
+      <div className="rounded-3xl bg-white dark:bg-slate-900/80 border border-gray-200 dark:border-slate-800 p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-black text-gray-950 dark:text-white">
+              <Globe2 size={17} className="text-teal-500" />
+              Global Open Library Search
+            </div>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+              Search millions of public book records and use AI to convert book topics into study explanations.
+            </p>
+          </div>
+          <button
+            onClick={() => searchOpenLibrary()}
+            disabled={isSearchingOnline || !searchQuery.trim()}
+            className="px-4 py-2 rounded-xl bg-teal-600 text-white text-xs font-black hover:bg-teal-500 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isSearchingOnline ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+            <span>Search Online</span>
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {topicSuggestions.map(topic => (
+            <button
+              key={topic}
+              onClick={() => {
+                setSearchQuery(topic);
+                searchOpenLibrary(topic);
+              }}
+              className="px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 text-[11px] font-semibold text-gray-700 dark:text-slate-300 hover:border-teal-400"
+            >
+              {topic}
+            </button>
+          ))}
+        </div>
+        {onlineError && (
+          <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 px-3 py-2 text-xs font-semibold text-rose-300">
+            {onlineError}
+          </div>
+        )}
+      </div>
+
+      {onlineBooks.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black text-gray-950 dark:text-white">Online Book Results ({onlineBooks.length})</h3>
+            <button
+              onClick={() => setOnlineBooks([])}
+              className="text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"
+            >
+              Clear results
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {onlineBooks.map(book => {
+              const subjects = (book.subject || []).slice(0, 4);
+              const openUrl = `https://openlibrary.org${book.key}`;
+              return (
+                <div key={book.key} className="p-5 rounded-3xl bg-white dark:bg-slate-900/80 border border-gray-200 dark:border-slate-800 hover:border-teal-500/50 transition-all space-y-4">
+                  <div className="flex items-start gap-3">
+                    {book.cover_i ? (
+                      <img
+                        src={`https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`}
+                        alt=""
+                        className="w-14 h-20 rounded-xl object-cover bg-gray-100 dark:bg-slate-800"
+                      />
+                    ) : (
+                      <div className="w-14 h-20 rounded-xl bg-teal-100 dark:bg-teal-950/50 flex items-center justify-center text-teal-700 dark:text-teal-300">
+                        <BookOpen size={22} />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-black text-gray-950 dark:text-white line-clamp-2">{book.title}</h4>
+                      <p className="mt-1 text-[11px] text-gray-500 dark:text-slate-400">
+                        {(book.author_name || ['Unknown author']).slice(0, 2).join(', ')}
+                        {book.first_publish_year ? ` • ${book.first_publish_year}` : ''}
+                      </p>
+                      <p className="mt-1 text-[10px] font-mono text-gray-400">{book.edition_count || 1} editions</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {subjects.length ? subjects.map(subject => (
+                      <span key={subject} className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-950 text-[10px] text-gray-600 dark:text-slate-400">
+                        {subject}
+                      </span>
+                    )) : (
+                      <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-950 text-[10px] text-gray-600 dark:text-slate-400">
+                        General reference
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-slate-800">
+                    <a
+                      href={openUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-bold text-teal-700 dark:text-teal-300 hover:underline flex items-center gap-1"
+                    >
+                      Open Library <ExternalLink size={12} />
+                    </a>
+                    <button
+                      onClick={() => openExplainModal(`Book: ${book.title}\nAuthor: ${(book.author_name || ['Unknown']).join(', ')}\nSubjects: ${subjects.join(', ') || 'General'}\nExplain how this book can help solve doubts for ${searchQuery || 'this topic'}.`, searchQuery || 'Digital Library')}
+                      className="px-3 py-1.5 rounded-xl bg-teal-600/15 text-teal-700 dark:text-teal-300 hover:bg-teal-600 hover:text-white text-xs font-black"
+                    >
+                      Ask AI
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Resource Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -139,7 +292,7 @@ export const DigitalLibraryView: React.FC = () => {
               </div>
 
               <button
-                onClick={() => openExplainModal(res.title, res.subjectName)}
+                onClick={() => openExplainModal(`${res.title}\n${res.description}\nTags: ${res.tags.join(', ')}`, res.subject)}
                 className="px-3 py-1.5 rounded-xl bg-teal-600/20 hover:bg-teal-600 text-teal-300 hover:text-slate-950 text-xs font-bold flex items-center gap-1 transition-colors"
               >
                 <span>Read & AI Query</span>
