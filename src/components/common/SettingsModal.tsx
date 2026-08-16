@@ -25,6 +25,7 @@ export const SettingsModal: React.FC = () => {
     user,
     updateUser,
     triggerConfetti,
+    logout,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'general' | 'ai' | 'mobile' | 'data'>('general');
@@ -306,6 +307,25 @@ export const SettingsModal: React.FC = () => {
 
           {activeTab === 'data' && (
             <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div className="font-semibold text-white">Device Login</div>
+                  <div className="text-slate-400 text-[11px]">
+                    Sign out on this browser and show the login screen again.
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    logout();
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-white hover:border-cyan-500 transition-colors"
+                >
+                  <Shield size={14} />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+
               <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
                 <div>
                   <div className="font-semibold text-white">Export Study Data</div>

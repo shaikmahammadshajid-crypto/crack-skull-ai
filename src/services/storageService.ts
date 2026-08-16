@@ -31,6 +31,7 @@ import {
 } from './demoData';
 
 const KEYS = {
+  AUTH: 'crack_skull_auth',
   USER: 'crack_skull_user',
   SUBJECTS: 'crack_skull_subjects',
   DOCUMENTS: 'crack_skull_documents',
@@ -49,6 +50,40 @@ const KEYS = {
 };
 
 export const storageService = {
+  // Auth session
+  getAuthState(): boolean {
+    try {
+      const remembered = localStorage.getItem(KEYS.AUTH) === 'remembered';
+      const sessionActive = sessionStorage.getItem(KEYS.AUTH) === 'session';
+      return remembered || sessionActive;
+    } catch {
+      return false;
+    }
+  },
+
+  saveAuthState(rememberDevice: boolean) {
+    try {
+      if (rememberDevice) {
+        localStorage.setItem(KEYS.AUTH, 'remembered');
+        sessionStorage.removeItem(KEYS.AUTH);
+      } else {
+        sessionStorage.setItem(KEYS.AUTH, 'session');
+        localStorage.removeItem(KEYS.AUTH);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  clearAuthState() {
+    try {
+      localStorage.removeItem(KEYS.AUTH);
+      sessionStorage.removeItem(KEYS.AUTH);
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
   // User Profile
   getUser(): UserProfile {
     try {

@@ -8,6 +8,7 @@ import { VoiceAssistantModal } from './components/common/VoiceAssistantModal';
 import { AIExplainModal } from './components/common/AIExplainModal';
 import { SettingsModal } from './components/common/SettingsModal';
 import { AdminDashboardModal } from './components/admin/AdminDashboardModal';
+import { LoginView } from './components/auth/LoginView';
 
 import { CommandDashboard } from './components/dashboard/CommandDashboard';
 import { AITutorView } from './components/ai/AITutorView';
@@ -25,8 +26,12 @@ import { ExamCalendarView } from './components/calendar/ExamCalendarView';
 import { StudentProfileView } from './components/profile/StudentProfileView';
 
 const MainLayout: React.FC = () => {
-  const { activeTab, setActiveTab } = useApp();
+  const { activeTab, setActiveTab, isAuthenticated } = useApp();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+
+  if (!isAuthenticated) {
+    return <LoginView />;
+  }
 
   const renderActiveView = () => {
     switch (activeTab) {

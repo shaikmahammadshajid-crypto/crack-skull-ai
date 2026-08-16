@@ -3,12 +3,17 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -129,7 +134,7 @@ Student question/prompt: ${message}
 Provide a comprehensive, beautifully formatted Markdown response with clear headers, bold emphasis, code blocks or tables where appropriate.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: GEMINI_MODEL,
       contents: prompt,
       config: {
         systemInstruction: chosenSystemInstruction,
@@ -183,7 +188,7 @@ Respond ONLY with a valid JSON array of objects with the following schema:
 ]`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: GEMINI_MODEL,
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -253,7 +258,7 @@ Return ONLY valid JSON matching this schema:
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: GEMINI_MODEL,
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -309,7 +314,7 @@ Respond ONLY with JSON:
 }`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.7-flash',
+        model: GEMINI_MODEL,
         contents: prompt,
         config: { responseMimeType: 'application/json' },
       });
@@ -336,7 +341,7 @@ Respond ONLY in JSON format:
 }`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.7-flash',
+        model: GEMINI_MODEL,
         contents: prompt,
         config: { responseMimeType: 'application/json' },
       });
@@ -356,7 +361,7 @@ Respond ONLY in JSON:
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: GEMINI_MODEL,
       contents: prompt,
       config: { responseMimeType: 'application/json' },
     });
@@ -411,7 +416,7 @@ Respond ONLY with JSON:
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: GEMINI_MODEL,
       contents: prompt,
       config: { responseMimeType: 'application/json' },
     });
@@ -496,7 +501,7 @@ Respond ONLY with valid JSON:
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: GEMINI_MODEL,
       contents: prompt,
       config: { responseMimeType: 'application/json' },
     });

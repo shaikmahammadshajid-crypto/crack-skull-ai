@@ -54,6 +54,8 @@ interface AppContextType {
   // Auth & Onboarding
   isAuthenticated: boolean;
   setIsAuthenticated: (val: boolean) => void;
+  login: (updates: Partial<UserProfile>, rememberDevice: boolean) => void;
+  logout: () => void;
   onboardingComplete: boolean;
   setOnboardingComplete: (val: boolean) => void;
 
@@ -147,7 +149,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   // Auth
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticatedState] = useState<boolean>(() => storageService.getAuthState());
   const [onboardingComplete, setOnboardingComplete] = useState<boolean>(true);
 
   // Core Data loaded from storage
@@ -226,6 +228,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     refreshCrackScore();
   }, [refreshCrackScore]);
+
+  const setIsAuthenticated = useCallback((val: boolean) => {
+    setIsAuthenticatedState(val);
+    if (!val) {
+      storageService.clearAuthState();
+    }
+  }, []);
+
+  const login = useCallback((updates: Partial<UserProfile>, rememberDevice: boolean) => {
+    setUserState(prev => {
+      const updated = {
+        ...prev,
+        ...updates,
+        id: prev.id || `user_${Date.now()}`,
+        createdAt: prev.createdAt || new Date().toISOString(),
+      };
+      storageService.saveUser(updated);
+      return updated;
+    });
+    storageService.saveAuthState(rememberDevice);
+    setIsAuthenticatedState(true);
+    setOnboardingComplete(true);
+  }, []);
+
+  const logout = useCallback(() => {
+    storageService.clearAuthState();
+    setIsAuthenticatedState(false);
+    setVoiceAssistantOpen(false);
+    setGlobalSearchOpen(false);
+    setSettingsOpen(false);
+    setAdminOpen(false);
+    setActiveTab('dashboard');
+  }, []);
 
   // Add XP and level up
   const addXp = useCallback((amount: number) => {
@@ -524,6 +559,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleTheme,
         isAuthenticated,
         setIsAuthenticated,
+        login,
+        logout,
         onboardingComplete,
         setOnboardingComplete,
         user,
