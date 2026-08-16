@@ -307,7 +307,12 @@ export const storageService = {
   getLibraryResources(): LibraryResource[] {
     try {
       const data = localStorage.getItem(KEYS.LIBRARY);
-      return data ? JSON.parse(data) : DEMO_LIBRARY_RESOURCES;
+      if (!data) return DEMO_LIBRARY_RESOURCES;
+
+      const savedResources = JSON.parse(data) as LibraryResource[];
+      const savedIds = new Set(savedResources.map(resource => resource.id));
+      const newBuiltInResources = DEMO_LIBRARY_RESOURCES.filter(resource => !savedIds.has(resource.id));
+      return [...savedResources, ...newBuiltInResources];
     } catch {
       return DEMO_LIBRARY_RESOURCES;
     }

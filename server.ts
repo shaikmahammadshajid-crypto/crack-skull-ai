@@ -16,7 +16,8 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const NVIDIA_BASE_URL = process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
-const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.1-8b-instruct';
+const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
+const NVIDIA_TIMEOUT_MS = Number(process.env.NVIDIA_TIMEOUT_MS) || 35000;
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -43,12 +44,16 @@ async function callNvidiaChat(params: {
   temperature?: number;
   maxTokens?: number;
 }): Promise<string | null> {
-  const apiKey = process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY;
+  const apiKey = process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY || process.env.Vide_Coders;
   if (!apiKey) return null;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), NVIDIA_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         Authorization: `Bearer ${apiKey}`,
         Accept: 'application/json',
@@ -78,6 +83,8 @@ async function callNvidiaChat(params: {
   } catch (error) {
     console.warn('NVIDIA API unavailable, falling back:', error);
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -104,8 +111,8 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     appName: 'Crack Skull AI',
     version: '1.0.0',
-    aiProvider: process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY ? 'nvidia' : process.env.GEMINI_API_KEY ? 'gemini' : 'offline',
-    hasNvidiaKey: !!(process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY),
+    aiProvider: process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY || process.env.Vide_Coders ? 'nvidia' : process.env.GEMINI_API_KEY ? 'gemini' : 'offline',
+    hasNvidiaKey: !!(process.env.NVIDIA_API_KEY || process.env.NVIDIA_INFERENCE_API_KEY || process.env.Vide_Coders),
     hasApiKey: !!process.env.GEMINI_API_KEY,
   });
 });
@@ -138,8 +145,11 @@ app.post('/api/ai/chat', async (req, res) => {
     const universityAnswerContract = `University answer quality contract:
 - First identify the exact topic and answer that topic directly. Do not give a generic template.
 - Use the syllabus/exam style: definition, principle, steps/derivation, diagram/table when useful, example, applications, limitations, common mistakes, and 2/5/10-mark answer cues.
-- Cover any education stream if asked: engineering, science, medicine, law, commerce, management, humanities, mathematics, competitive exams, placements, and practical projects.
+- For mathematical questions, solve the actual problem. Show every transformation step, name the theorem/formula used, define symbols, verify constraints, and box the final answer.
+- For theory questions, write like a high-scoring university answer: short intro, structured explanation, labeled subheadings, keywords, example, and conclusion.
+- Cover any department if asked: engineering, science, medicine, pharmacy, nursing, law, commerce, management, humanities, mathematics, education, agriculture, competitive exams, placements, and practical projects.
 - If the prompt is ambiguous, state the most likely interpretation and answer it; ask at most one clarifying question at the end.
+- Never return only a study template when the student asks for an answer. If a complete numeric answer is not possible because data is missing, solve the symbolic/general case and say exactly what value is needed.
 - For factual uncertainty, say what must be verified instead of inventing details.`;
 
     const systemInstructions: Record<string, string> = {
@@ -208,7 +218,7 @@ Previous history summary: ${Array.isArray(history) ? history.slice(-4).map((h: {
 
 Student question/prompt: ${message}
 
-Provide a comprehensive, beautifully formatted Markdown response with clear headers, bold emphasis, code blocks or tables where appropriate.`;
+Provide a comprehensive, ChatGPT-style Markdown response with clear headers, short paragraphs, bold keywords, code blocks, equations, worked steps, or tables where appropriate. Avoid vague filler and answer the student's exact question first.`;
 
     const nvidiaReply = await callNvidiaChat({
       system: chosenSystemInstruction,
@@ -218,7 +228,7 @@ Provide a comprehensive, beautifully formatted Markdown response with clear head
     });
 
     if (nvidiaReply) {
-      return res.json({ reply: nvidiaReply, mode, isFallback: false, provider: 'nvidia' });
+      return res.json({ reply: enhanceAcademicReply(nvidiaReply, message, subject), mode, isFallback: false, provider: 'nvidia' });
     }
 
     if (!ai) {
@@ -240,7 +250,7 @@ Provide a comprehensive, beautifully formatted Markdown response with clear head
     });
 
     const reply = response.text || 'Unable to generate response. Please try again.';
-    res.json({ reply, mode, isFallback: false, provider: 'gemini' });
+    res.json({ reply: enhanceAcademicReply(reply, message, subject), mode, isFallback: false, provider: 'gemini' });
   } catch (error: any) {
     console.error('Chat API Error:', error);
     res.status(500).json({
@@ -479,7 +489,8 @@ Respond ONLY in JSON format:
         maxTokens: 2200,
       });
       if (nvidiaEvalText) {
-        return res.json({ ...parseJsonFromText(nvidiaEvalText, generateOfflineVivaResponse(action, subject, topic, currentQuestion, studentAnswer, history)), provider: 'nvidia' });
+        const rawEvaluation = parseJsonFromText(nvidiaEvalText, generateOfflineVivaResponse(action, subject, topic, currentQuestion, studentAnswer, history));
+        return res.json({ ...normalizeVivaEvaluation(rawEvaluation, subject, topic, currentQuestion, studentAnswer, history), provider: 'nvidia' });
       }
 
       if (!ai) {
@@ -715,12 +726,14 @@ Respond ONLY with valid JSON:
 function generateOfflineAiReply(message: string, mode: string, subject?: string, responseLanguage = 'English'): string {
   const languageNote = responseLanguage === languageNames.auto
     ? 'I will mirror the language you use in your question when the online AI model is available.'
-    : `Preferred response language: ${responseLanguage}. Offline answers are limited, but the online Gemini assistant will fully respond in this language.`;
+    : `Preferred response language: ${responseLanguage}. Offline answers are limited, but the configured live AI assistant will fully respond in this language.`;
 
   const cleanMsg = message.toLowerCase();
   const topic = extractTopic(message, subject);
   const modeTitle = String(mode || 'tutor').replace(/-/g, ' ');
   const knowledge = findTopicKnowledge(message, subject);
+  const offlineMathReply = generateOfflineMathReply(message, subject, languageNote);
+  if (offlineMathReply) return offlineMathReply;
 
   if (cleanMsg.includes('binary search') || cleanMsg.includes('search algorithm')) {
     return `### Binary Search Algorithm
@@ -928,7 +941,106 @@ ${mistakes}
 #### 6. Viva Practice Questions
 ${viva}
 
-Live Gemini is not configured on this deployment yet, so this is the improved offline academic fallback. Add \`GEMINI_API_KEY\` in Render to enable full exact AI responses.`;
+Live AI is not configured or reachable on this deployment right now, so this is the improved offline academic fallback. Add \`NVIDIA_API_KEY\`, \`Vide_Coders\`, or \`GEMINI_API_KEY\` in your environment to enable full exact AI responses.`;
+}
+
+function enhanceAcademicReply(reply: string, message: string, subject?: string): string {
+  const knowledge = findTopicKnowledge(message, subject);
+  if (!knowledge.examKeywords.length || reply.includes('Verified University Checklist')) {
+    return reply;
+  }
+
+  const checklist = `\n\n---\n\n### Verified University Checklist\n\n**Exact topic:** ${knowledge.title}\n\n**Must-use exam keywords:** ${knowledge.examKeywords.map(keyword => `\`${keyword}\``).join(', ')}\n\n**High-scoring model point:** ${knowledge.idealAnswer}\n\n**Common mistakes to avoid:**\n${knowledge.commonMistakes.map(item => `- ${item}`).join('\n')}`;
+
+  return `${reply}${checklist}`;
+}
+
+function generateOfflineMathReply(message: string, subject = 'Mathematics', languageNote: string): string | null {
+  const definiteIntegral = message.match(/integrat(?:e|ion|al)?\s+(?:of\s+)?x\^?(\d+)\s+from\s+(-?\d+(?:\.\d+)?)\s+to\s+(-?\d+(?:\.\d+)?)/i);
+  if (definiteIntegral) {
+    const power = Number(definiteIntegral[1]);
+    const lower = Number(definiteIntegral[2]);
+    const upper = Number(definiteIntegral[3]);
+    const newPower = power + 1;
+    const coefficient = 1 / newPower;
+    const upperValue = Math.pow(upper, newPower);
+    const lowerValue = Math.pow(lower, newPower);
+    const result = coefficient * (upperValue - lowerValue);
+
+    return `### Definite Integral: ∫ x^${power} dx from ${lower} to ${upper}
+
+${languageNote}
+
+#### 1. Given
+Evaluate:
+
+\`\`\`text
+∫[${lower} to ${upper}] x^${power} dx
+\`\`\`
+
+#### 2. Formula Used
+Power rule of integration:
+
+\`\`\`text
+∫ x^n dx = x^(n+1) / (n+1), where n ≠ -1
+\`\`\`
+
+Here, **n = ${power}**, so:
+
+\`\`\`text
+∫ x^${power} dx = x^${newPower} / ${newPower}
+\`\`\`
+
+#### 3. Step-by-Step Solution
+\`\`\`text
+∫[${lower} to ${upper}] x^${power} dx
+= [x^${newPower} / ${newPower}] from ${lower} to ${upper}
+= (${upper}^${newPower} / ${newPower}) - (${lower}^${newPower} / ${newPower})
+= (${upperValue} / ${newPower}) - (${lowerValue} / ${newPower})
+= ${formatNumber(result)}
+\`\`\`
+
+#### 4. Final Answer
+
+**Answer: ${formatNumber(result)}**
+
+#### 5. Exam Note
+Mention the **power rule**, write the substitution of upper and lower limits clearly, and do not forget the subtraction order: **upper limit value - lower limit value**.`;
+  }
+
+  const derivative = message.match(/(?:differentiate|derivative\s+of|derive)\s+(?:of\s+)?x\^?(\d+)/i);
+  if (derivative) {
+    const power = Number(derivative[1]);
+    const newPower = power - 1;
+
+    return `### Derivative of x^${power}
+
+${languageNote}
+
+#### 1. Formula Used
+Power rule of differentiation:
+
+\`\`\`text
+d/dx(x^n) = n x^(n-1)
+\`\`\`
+
+#### 2. Step-by-Step Solution
+\`\`\`text
+d/dx(x^${power})
+= ${power}x^(${power} - 1)
+= ${power}x^${newPower}
+\`\`\`
+
+#### 3. Final Answer
+
+**Answer: ${power}x^${newPower}**`;
+  }
+
+  return null;
+}
+
+function formatNumber(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(4).replace(/\.?0+$/, '');
 }
 
 function extractTopic(message: string, subject?: string): string {
@@ -1115,7 +1227,8 @@ function generateOfflineVivaResponse(action: string, subject = 'DBMS', topic = '
     const keywordScore = Math.min(35, matchedKeywords.length * 12);
     const depthScore = Math.min(25, Math.floor(wordCount / 2));
     const exampleScore = /(example|real|bank|case|scenario|application|diagram|formula|because)/i.test(studentAnswer || '') ? 15 : 0;
-    const score = Math.max(35, Math.min(95, 25 + keywordScore + depthScore + exampleScore));
+    const rawScore = Math.max(35, Math.min(95, 25 + keywordScore + depthScore + exampleScore));
+    const score = missingKeywords.length === 0 && matchedKeywords.length > 0 ? Math.max(72, rawScore) : rawScore;
 
     return {
       score,
@@ -1124,13 +1237,13 @@ function generateOfflineVivaResponse(action: string, subject = 'DBMS', topic = '
         ? [`Used relevant keyword(s): ${matchedKeywords.slice(0, 3).join(', ')}`, 'Attempted the core concept']
         : ['Attempted an answer'],
       improvements: [
-        missingKeywords.length ? `Add missing keyword(s): ${missingKeywords.join(', ')}` : 'Add a stronger example or limitation',
-        'Give one concrete example and one limitation',
+        missingKeywords.length ? `Add missing keyword(s): ${missingKeywords.join(', ')}` : 'Add a stronger example, edge case, or limitation',
+        'Organize the answer as definition -> explanation -> example -> limitation',
       ],
       missingKeywords,
       mistakeAnalysis: missingKeywords.length
         ? `Your answer is incomplete because it does not clearly mention ${missingKeywords.join(', ')} for this exact question. In viva, missing standard terms reduces marks even when the general idea is correct.`
-        : 'Your answer includes the core keywords. Improve by organizing it as definition, explanation, example, and limitation.',
+        : 'Your answer covers the exact core concept. Improve marks by adding a concrete example, edge case, and one limitation.',
       idealAnswer: knowledge.idealAnswer,
       microLesson: `Remember: ${knowledge.definition}`,
       followUpQuestion: knowledge.vivaQuestions[Math.min(knowledge.vivaQuestions.length - 1, Math.max(0, matchedKeywords.length % knowledge.vivaQuestions.length))],
@@ -1144,6 +1257,33 @@ function generateOfflineVivaResponse(action: string, subject = 'DBMS', topic = '
     expectedKeypoints: knowledge.examKeywords.slice(0, 4),
     idealAnswer: knowledge.idealAnswer,
     difficulty: 'Medium',
+  };
+}
+
+function normalizeVivaEvaluation(raw: any, subject = 'DBMS', topic = 'Transactions', currentQuestion?: string, studentAnswer?: string, history: any[] = []) {
+  const trusted = generateOfflineVivaResponse('evaluate-answer', subject, topic, currentQuestion, studentAnswer, history);
+  const rawMissing = Array.isArray(raw?.missingKeywords) ? raw.missingKeywords : [];
+  const trustedMissing = Array.isArray((trusted as any).missingKeywords) ? (trusted as any).missingKeywords : [];
+
+  return {
+    ...raw,
+    score: Math.round(((Number(raw?.score) || (trusted as any).score || 70) + ((trusted as any).score || 70)) / 2),
+    verdict: raw?.verdict || (trusted as any).verdict,
+    strengths: Array.isArray(raw?.strengths) && raw.strengths.length ? raw.strengths : (trusted as any).strengths,
+    improvements: trustedMissing.length ? (trusted as any).improvements : [
+      'Add a stronger example, edge case, or limitation',
+      'Organize the answer as definition -> explanation -> example -> limitation',
+    ],
+    missingKeywords: trustedMissing,
+    mistakeAnalysis: trustedMissing.length
+      ? (trusted as any).mistakeAnalysis
+      : 'Your answer covers the exact core concept. Improve marks by adding a concrete example, edge case, and one limitation.',
+    idealAnswer: (trusted as any).idealAnswer || raw?.idealAnswer,
+    microLesson: (trusted as any).microLesson || raw?.microLesson,
+    followUpQuestion: raw?.followUpQuestion || (trusted as any).followUpQuestion,
+    modelNotes: rawMissing.length && rawMissing.join('|') !== trustedMissing.join('|')
+      ? 'AI review was normalized against the exact viva question to remove unrelated missing-keyword penalties.'
+      : undefined,
   };
 }
 

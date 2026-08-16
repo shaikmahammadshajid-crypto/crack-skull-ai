@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { aiService } from '../../services/aiService';
 import { ChatMessage, ChatMode } from '../../types';
@@ -352,9 +352,7 @@ What topic would you like to master today?`,
               </div>
 
               {/* Message Markdown Content */}
-              <div className="whitespace-pre-wrap font-sans leading-relaxed">
-                {msg.content}
-              </div>
+              <MarkdownAnswer content={msg.content} />
 
               {/* AI Message Action Buttons */}
               {msg.role === 'assistant' && (
@@ -474,3 +472,167 @@ const ModeTab: React.FC<{
     <span>{label}</span>
   </button>
 );
+
+const MarkdownAnswer: React.FC<{ content: string }> = ({ content }) => {
+  const rendered = useMemo(() => renderMarkdownBlocks(content), [content]);
+  return <div className="ai-markdown font-sans">{rendered}</div>;
+};
+
+function renderMarkdownBlocks(content: string): React.ReactNode[] {
+  const nodes: React.ReactNode[] = [];
+  const lines = content.replace(/\r\n/g, '\n').split('\n');
+  let index = 0;
+
+  const collectList = (ordered: boolean) => {
+    const items: string[] = [];
+    while (index < lines.length) {
+      const line = lines[index];
+      const match = ordered ? line.match(/^\s*\d+\.\s+(.*)$/) : line.match(/^\s*[-*]\s+(.*)$/);
+      if (!match) break;
+      items.push(match[1]);
+      index += 1;
+    }
+    const ListTag = ordered ? 'ol' : 'ul';
+    nodes.push(
+      <ListTag key={`list_${index}`} className={ordered ? 'list-decimal' : 'list-disc'}>
+        {items.map((item, itemIndex) => (
+          <li key={`${item}_${itemIndex}`}>{renderInlineMarkdown(item)}</li>
+        ))}
+      </ListTag>
+    );
+  };
+
+  while (index < lines.length) {
+    const line = lines[index];
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith('```')) {
+      const language = trimmed.replace(/```/, '').trim();
+      const code: string[] = [];
+      index += 1;
+      while (index < lines.length && !lines[index].trim().startsWith('```')) {
+        code.push(lines[index]);
+        index += 1;
+      }
+      index += 1;
+      nodes.push(
+        <pre key={`code_${index}`} className="ai-code-block">
+          {language && <span className="ai-code-language">{language}</span>}
+          <code>{code.join('\n')}</code>
+        </pre>
+      );
+      continue;
+    }
+
+    if (/^---+$/.test(trimmed)) {
+      nodes.push(<hr key={`hr_${index}`} />);
+      index += 1;
+      continue;
+    }
+
+    if (/^\|(.+\|)+$/.test(trimmed) && index + 1 < lines.length && /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(lines[index + 1].trim())) {
+      const headerCells = splitTableRow(trimmed);
+      index += 2;
+      const rows: string[][] = [];
+      while (index < lines.length && /^\|(.+\|)+$/.test(lines[index].trim())) {
+        rows.push(splitTableRow(lines[index].trim()));
+        index += 1;
+      }
+      nodes.push(
+        <div key={`table_${index}`} className="ai-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                {headerCells.map((cell, cellIndex) => (
+                  <th key={`${cell}_${cellIndex}`}>{renderInlineMarkdown(cell)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, rowIndex) => (
+                <tr key={`row_${rowIndex}`}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={`${cell}_${cellIndex}`}>{renderInlineMarkdown(cell)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) {
+      const level = Math.min(heading[1].length, 4);
+      const HeadingTag = `h${level}` as React.ElementType;
+      nodes.push(<HeadingTag key={`heading_${index}`}>{renderInlineMarkdown(heading[2])}</HeadingTag>);
+      index += 1;
+      continue;
+    }
+
+    if (/^\s*\d+\.\s+/.test(line)) {
+      collectList(true);
+      continue;
+    }
+
+    if (/^\s*[-*]\s+/.test(line)) {
+      collectList(false);
+      continue;
+    }
+
+    const paragraphLines = [trimmed];
+    index += 1;
+    while (
+      index < lines.length &&
+      lines[index].trim() &&
+      !lines[index].trim().startsWith('```') &&
+      !/^#{1,4}\s+/.test(lines[index].trim()) &&
+      !/^\s*(?:[-*]|\d+\.)\s+/.test(lines[index]) &&
+      !/^\|(.+\|)+$/.test(lines[index].trim()) &&
+      !/^---+$/.test(lines[index].trim())
+    ) {
+      paragraphLines.push(lines[index].trim());
+      index += 1;
+    }
+    nodes.push(<p key={`p_${index}`}>{renderInlineMarkdown(paragraphLines.join(' '))}</p>);
+  }
+
+  return nodes;
+}
+
+function splitTableRow(row: string): string[] {
+  return row.replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
+}
+
+function renderInlineMarkdown(text: string): React.ReactNode[] {
+  const nodes: React.ReactNode[] = [];
+  const pattern = /(`[^`]+`|\*\*[^*]+\*\*)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
+    const token = match[0];
+    if (token.startsWith('`')) {
+      nodes.push(<code key={`code_${match.index}`}>{token.slice(1, -1)}</code>);
+    } else {
+      nodes.push(<strong key={`strong_${match.index}`}>{token.slice(2, -2)}</strong>);
+    }
+    lastIndex = match.index + token.length;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+
+  return nodes;
+}

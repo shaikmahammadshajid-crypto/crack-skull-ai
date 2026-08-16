@@ -36,8 +36,17 @@ export const DigitalLibraryView: React.FC = () => {
       r.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
 
     if (activeCategory === 'all') return matchesSearch;
-    return matchesSearch && r.category === activeCategory;
+    if (activeCategory === 'textbook') return matchesSearch && /textbook|handbook|guide|reference/i.test(`${r.fileFormat} ${r.title} ${r.license}`);
+    if (activeCategory === 'cheat_sheet') return matchesSearch && /formula|cheat|quick|summary|workbook|practice/i.test(`${r.fileFormat} ${r.title} ${r.tags.join(' ')}`);
+    if (activeCategory === 'notes') return matchesSearch && /notes|course|lecture|tutorial|handbook/i.test(`${r.fileFormat} ${r.title} ${r.tags.join(' ')}`);
+    if (activeCategory === 'pyq_archive') return matchesSearch && /pyq|previous|past paper|exam|question/i.test(`${r.fileFormat} ${r.title} ${r.description} ${r.tags.join(' ')}`);
+    return matchesSearch;
   });
+
+  const departmentCount = useMemo(
+    () => new Set(libraryResources.map(resource => resource.subject)).size,
+    [libraryResources]
+  );
 
   const topicSuggestions = useMemo(
     () => ['DBMS normalization', 'operating system paging', 'data structures algorithms', 'machine learning', 'computer networks', 'software engineering'],
@@ -79,7 +88,7 @@ export const DigitalLibraryView: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-300">
-            Search local academic resources plus Open Library's global book catalog for textbooks, topics, authors, and doubt-solving references.
+            Search {libraryResources.length} in-app academic resources across {departmentCount} subjects plus Open Library's global book catalog for textbooks, topics, authors, and doubt-solving references.
           </p>
         </div>
       </div>
@@ -93,7 +102,7 @@ export const DigitalLibraryView: React.FC = () => {
               activeCategory === 'all' ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400'
             }`}
           >
-            All Resources ({libraryResources.length})
+            In-App Library ({libraryResources.length})
           </button>
           <button
             onClick={() => setActiveCategory('textbook')}
@@ -101,7 +110,7 @@ export const DigitalLibraryView: React.FC = () => {
               activeCategory === 'textbook' ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400'
             }`}
           >
-            Open Textbooks
+            Textbooks
           </button>
           <button
             onClick={() => setActiveCategory('cheat_sheet')}
