@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { CrackScoreGauge } from './CrackScoreGauge';
 import { StreakFlame } from './StreakFlame';
@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Zap,
   Menu,
+  Download,
 } from 'lucide-react';
 
 export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobileMenu }) => {
@@ -34,8 +35,34 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
 
   const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  useEffect(() => {
+    const standalone = window.matchMedia?.('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    setIsStandalone(Boolean(standalone));
+
+    const onBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event);
+    };
+
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      await installPrompt.userChoice.catch(() => null);
+      setInstallPrompt(null);
+      return;
+    }
+
+    alert('Install Crack Skull AI:\n\nAndroid/Chrome/Edge: tap browser menu > Install app.\nMac/Windows Chrome: address bar install icon or menu > Save and share > Install page as app.\niPhone/iPad Safari: Share button > Add to Home Screen.');
+  };
 
   return (
     <header className="sticky top-0 z-20 h-16 bg-white/90 dark:bg-[#161922]/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 lg:px-6 flex items-center justify-between gap-4 transition-colors duration-150">
@@ -147,6 +174,17 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
         <div className="hidden sm:block">
           <StreakFlame streakDays={user.streakDays} size="sm" />
         </div>
+
+        {/* Voice Assistant Mic Button */}
+        {!isStandalone && (
+          <button
+            onClick={handleInstallApp}
+            className="p-2 rounded-full bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700/80 text-gray-600 dark:text-gray-300 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all shadow-xs"
+            title="Install app on Android, iOS, Windows, or Mac"
+          >
+            <Download size={15} />
+          </button>
+        )}
 
         {/* Voice Assistant Mic Button */}
         <button

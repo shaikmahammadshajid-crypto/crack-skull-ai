@@ -5,6 +5,7 @@ import {
   Subject,
   DocumentItem,
   Quiz,
+  QuizQuestion,
   QuizAttempt,
   Flashcard,
   StudyPlan,
@@ -143,6 +144,76 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+function normalizeQuizQuestion(raw: any, index: number, fallbackTopic: string, fallbackDifficulty: QuizQuestion['difficulty']): QuizQuestion {
+  const options = Array.isArray(raw?.options) && raw.options.length >= 2
+    ? raw.options.map((option: any) => String(option))
+    : ['Review the core definition', 'Skip the topic', 'Memorize without understanding', 'Ignore examples'];
+
+  const correctIndex = Number.isInteger(raw?.correctIndex)
+    ? raw.correctIndex
+    : Number.isInteger(raw?.correctOptionIndex)
+      ? raw.correctOptionIndex
+      : 0;
+
+  return {
+    id: String(raw?.id || `q_${index + 1}`),
+    type: raw?.type || 'mcq',
+    question: String(raw?.question || raw?.questionText || raw?.prompt || `Question ${index + 1}: Explain ${fallbackTopic}.`),
+    options,
+    correctIndex: Math.max(0, Math.min(options.length - 1, correctIndex)),
+    correctAnswerText: raw?.correctAnswerText,
+    explanation: String(raw?.explanation || 'Review the concept explanation and compare it with the correct option.'),
+    topic: String(raw?.topic || raw?.topicTag || fallbackTopic),
+    difficulty: raw?.difficulty || fallbackDifficulty,
+    marks: Number(raw?.marks || 2),
+  };
+}
+
+function normalizeQuiz(quiz: Quiz): Quiz {
+  const fallbackTopic = quiz.topic || quiz.title || 'General Practice';
+  const fallbackDifficulty = quiz.difficulty || 'medium';
+  return {
+    ...quiz,
+    title: quiz.title || `${fallbackTopic} Practice Quiz`,
+    topic: fallbackTopic,
+    questions: (quiz.questions || []).map((question, index) =>
+      normalizeQuizQuestion(question, index, fallbackTopic, fallbackDifficulty)
+    ),
+  };
+}
+
+function normalizeStudyPlan(rawPlan: any, fallbackPlan: StudyPlan, dailyHours: number, isCrackMode: boolean): StudyPlan {
+  const todayTasks = (rawPlan?.todayMission?.tasks || rawPlan?.todayTasks || fallbackPlan.todayTasks).map((task: any, index: number) => ({
+    id: String(task?.id || `task_${Date.now()}_${index}`),
+    subject: String(task?.subject || rawPlan?.targetExam || fallbackPlan.targetExam || 'General'),
+    topic: String(task?.topic || task?.title || `Study block ${index + 1}`),
+    durationMinutes: Number(task?.durationMinutes || task?.minutes || 30),
+    type: task?.type || 'concept_revision',
+    difficulty: task?.difficulty || (index === 0 ? 'High' : 'Medium'),
+    reason: String(task?.reason || 'Scheduled by the adaptive planner based on exam priority and weak topics.'),
+    isCompleted: Boolean(task?.isCompleted),
+  }));
+
+  const weeklyRoadmap = (rawPlan?.weeklyRoadmap || fallbackPlan.weeklyRoadmap).map((week: any, index: number) => ({
+    day: String(week?.day || week?.dayRange || `Day ${index + 1}`),
+    focus: String(week?.focus || week?.focusTheme || week?.title || 'Revision and practice'),
+    hours: Number(week?.hours || week?.estimatedHours || dailyHours),
+  }));
+
+  return {
+    id: `plan_${Date.now()}`,
+    modeName: rawPlan?.modeName || (isCrackMode ? 'Crack Mode Sprint Plan' : 'Adaptive Mastery Plan'),
+    targetExam: rawPlan?.targetExam || fallbackPlan.targetExam || 'Semester Final',
+    daysRemaining: Number(rawPlan?.daysRemaining || fallbackPlan.daysRemaining || (isCrackMode ? 3 : 12)),
+    dailyHours,
+    isCrackMode,
+    todayTasks,
+    weeklyRoadmap,
+    crackTip: rawPlan?.crackTip || fallbackPlan.crackTip,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation & Theme
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
@@ -158,7 +229,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeSubject, setActiveSubject] = useState<Subject | null>(() => storageService.getSubjects()[0] || null);
   const [documents, setDocuments] = useState<DocumentItem[]>(() => storageService.getDocuments());
   const [studyPlan, setStudyPlan] = useState<StudyPlan>(() => storageService.getStudyPlan());
-  const [quizzes, setQuizzes] = useState<Quiz[]>(() => storageService.getQuizzes());
+  const [quizzes, setQuizzes] = useState<Quiz[]>(() => storageService.getQuizzes().map(normalizeQuiz));
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>(() => storageService.getQuizAttempts());
   const [flashcards, setFlashcards] = useState<Flashcard[]>(() => storageService.getFlashcards());
   const [vivaSessions, setVivaSessions] = useState<VivaSession[]>(() => storageService.getVivaSessions());
@@ -382,21 +453,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       weakTopics: weakList,
     });
     if (newPlan) {
-      const planObj: StudyPlan = {
-        id: `plan_${Date.now()}`,
-        modeName: newPlan.modeName || 'Adaptive Study Plan',
-        targetExam: newPlan.targetExam || 'Semester Final',
-        daysRemaining: newPlan.daysRemaining || 12,
-        dailyHours: user.dailyHours,
-        isCrackMode: user.isCrackModeActive,
-        todayTasks: newPlan.todayMission?.tasks?.map((t: any) => ({
-          ...t,
-          isCompleted: false,
-        })) || studyPlan.todayTasks,
-        weeklyRoadmap: newPlan.weeklyRoadmap || studyPlan.weeklyRoadmap,
-        crackTip: newPlan.crackTip || studyPlan.crackTip,
-        updatedAt: new Date().toISOString(),
-      };
+      const planObj = normalizeStudyPlan(newPlan, studyPlan, user.dailyHours, user.isCrackModeActive);
       setStudyPlan(planObj);
       storageService.saveStudyPlan(planObj);
       triggerConfetti();
@@ -405,8 +462,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Quiz operations
   const addQuiz = useCallback((quiz: Quiz) => {
+    const normalizedQuiz = normalizeQuiz(quiz);
     setQuizzes(prev => {
-      const updated = [quiz, ...prev];
+      const updated = [normalizedQuiz, ...prev];
       storageService.saveQuizzes(updated);
       return updated;
     });
@@ -439,7 +497,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [addXp, refreshCrackScore, triggerConfetti]);
 
   const startQuiz = useCallback((quiz: Quiz) => {
-    setActiveQuiz(quiz);
+    setActiveQuiz(normalizeQuiz(quiz));
   }, []);
 
   const finishActiveQuiz = useCallback(() => {

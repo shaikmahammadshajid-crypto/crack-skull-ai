@@ -64,17 +64,19 @@ export const KnowledgeMapView: React.FC = () => {
       questions: [
         {
           id: 'qkm1',
-          questionText: `Which of the following best characterizes ${node.topic}?`,
+          type: 'mcq',
+          question: `Which of the following best characterizes ${node.topic}?`,
           options: [
             'Strict Serializability Guarantee',
             'Relational Functional Closure',
             'Canonical Decomposition Rule',
             'None of the above',
           ],
-          correctOptionIndex: 0,
+          correctIndex: 0,
           explanation: `Mastery explanation for ${node.topic}. Verified against course syllabus.`,
-          topicTag: node.topic,
+          topic: node.topic,
           difficulty: 'medium',
+          marks: 2,
         },
       ],
       createdAt: new Date().toISOString(),

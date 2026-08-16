@@ -1131,7 +1131,146 @@ function extractTopic(message: string, subject?: string): string {
   return cleaned || subject || 'the selected topic';
 }
 
-function generateOfflineQuiz(subject = 'DBMS', topic = 'Transactions & ACID', difficulty = 'Medium', count = 5) {
+function generateOfflineQuiz(subject = 'General', topic = 'Core Concepts', difficulty = 'medium', count = 5) {
+  const normalizedTopic = String(topic || subject || 'Core Concepts');
+  const lowerTopic = normalizedTopic.toLowerCase();
+
+  if (/(oops|oop|object oriented|object-oriented|class|inheritance|polymorphism|encapsulation)/i.test(lowerTopic)) {
+    return [
+      {
+        id: 'oop_q1',
+        type: 'mcq',
+        question: 'Which OOP principle hides internal data and exposes controlled access through methods?',
+        options: ['Encapsulation', 'Inheritance', 'Polymorphism', 'Abstraction only'],
+        correctIndex: 0,
+        explanation: 'Encapsulation binds data and methods together and restricts direct access to object state.',
+        topic: normalizedTopic,
+        difficulty,
+        marks: 2,
+      },
+      {
+        id: 'oop_q2',
+        type: 'mcq',
+        question: 'Which OOP feature allows a child class to reuse and extend behavior from a parent class?',
+        options: ['Inheritance', 'Compilation', 'Exception handling', 'Indexing'],
+        correctIndex: 0,
+        explanation: 'Inheritance lets a subclass acquire fields and methods from a superclass and specialize them.',
+        topic: normalizedTopic,
+        difficulty,
+        marks: 2,
+      },
+      {
+        id: 'oop_q3',
+        type: 'mcq',
+        question: 'Method overloading and method overriding are most closely related to which concept?',
+        options: ['Polymorphism', 'Normalization', 'Deadlock', 'Paging'],
+        correctIndex: 0,
+        explanation: 'Polymorphism means one interface or method name can behave differently based on arguments or runtime object type.',
+        topic: normalizedTopic,
+        difficulty,
+        marks: 2,
+      },
+      {
+        id: 'oop_q4',
+        type: 'mcq',
+        question: 'Which statement best describes abstraction in OOP?',
+        options: [
+          'Showing essential features while hiding unnecessary implementation details',
+          'Copying all code into every class',
+          'Allowing direct access to private variables',
+          'Converting source code into machine code',
+        ],
+        correctIndex: 0,
+        explanation: 'Abstraction focuses on what an object does while hiding how the internal implementation works.',
+        topic: normalizedTopic,
+        difficulty,
+        marks: 2,
+      },
+      {
+        id: 'oop_q5',
+        type: 'mcq',
+        question: 'Why are constructors used in classes?',
+        options: [
+          'To initialize object state when an object is created',
+          'To delete all class methods',
+          'To prevent inheritance',
+          'To execute only after program termination',
+        ],
+        correctIndex: 0,
+        explanation: 'A constructor runs during object creation and sets the initial valid state of that object.',
+        topic: normalizedTopic,
+        difficulty,
+        marks: 2,
+      },
+    ].slice(0, count);
+  }
+
+  if (!/(dbms|database|acid|transaction|normalization|sql|2pl|deadlock)/i.test(`${subject} ${normalizedTopic}`)) {
+    const knowledge = findTopicKnowledge(normalizedTopic, subject);
+    return [
+      {
+        id: 'gen_q1',
+        type: 'mcq',
+        question: `What is the best first step when writing an exam answer on "${knowledge.title}"?`,
+        options: ['Give a precise definition', 'Skip directly to conclusion', 'Write unrelated history', 'Avoid examples'],
+        correctIndex: 0,
+        explanation: `A high-scoring answer on ${knowledge.title} starts with a direct definition before explanation and examples.`,
+        topic: normalizedTopic,
+        difficulty,
+        marks: 2,
+      },
+      {
+        id: 'gen_q2',
+        type: 'mcq',
+        question: `Which answer structure is strongest for "${knowledge.title}"?`,
+        options: ['Definition -> principle -> example -> applications -> limitations', 'Only keywords', 'Only diagram', 'Only conclusion'],
+        correctIndex: 0,
+        explanation: 'University answers score better when they combine definition, working, examples, applications, and limitations.',
+        topic: normalizedTopic,
+        difficulty,
+        marks: 2,
+      },
+      {
+        id: 'gen_q3',
+        type: 'mcq',
+        question: `Which keyword group is most relevant to "${knowledge.title}"?`,
+        options: [
+          knowledge.examKeywords.slice(0, 3).join(', '),
+          'unrelated, vague, random',
+          'skip, omit, guess',
+          'none of these',
+        ],
+        correctIndex: 0,
+        explanation: `Use standard exam keywords such as ${knowledge.examKeywords.slice(0, 4).join(', ')}.`,
+        topic: normalizedTopic,
+        difficulty,
+        marks: 2,
+      },
+      {
+        id: 'gen_q4',
+        type: 'mcq',
+        question: `What is a common mistake while answering "${knowledge.title}"?`,
+        options: [knowledge.commonMistakes[0] || 'Writing vague definitions', 'Adding a clear example', 'Using a diagram when useful', 'Writing exact keywords'],
+        correctIndex: 0,
+        explanation: 'Common mistakes reduce marks even when the student knows the rough idea.',
+        topic: normalizedTopic,
+        difficulty,
+        marks: 2,
+      },
+      {
+        id: 'gen_q5',
+        type: 'mcq',
+        question: `What should you add to make a "${knowledge.title}" answer more convincing?`,
+        options: ['A concrete example or application', 'Only decorative headings', 'No explanation', 'A guessed formula'],
+        correctIndex: 0,
+        explanation: 'Examples prove understanding and help convert theory into a complete exam answer.',
+        topic: normalizedTopic,
+        difficulty,
+        marks: 2,
+      },
+    ].slice(0, count);
+  }
+
   const questions = [
     {
       id: 'q1',
@@ -1140,7 +1279,7 @@ function generateOfflineQuiz(subject = 'DBMS', topic = 'Transactions & ACID', di
       options: ['Atomicity', 'Consistency', 'Isolation', 'Durability'],
       correctIndex: 0,
       explanation: 'Atomicity follows the "all-or-nothing" rule. If any statement fails, the entire transaction is rolled back.',
-      topic,
+      topic: normalizedTopic,
       difficulty,
       marks: 2,
     },
@@ -1156,7 +1295,7 @@ function generateOfflineQuiz(subject = 'DBMS', topic = 'Transactions & ACID', di
       ],
       correctIndex: 0,
       explanation: 'A dirty read occurs when Transaction A reads data modified by Transaction B before Transaction B commits. If B rolls back, A holds invalid data.',
-      topic,
+      topic: normalizedTopic,
       difficulty,
       marks: 2,
     },

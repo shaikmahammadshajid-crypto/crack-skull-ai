@@ -211,20 +211,20 @@ export const StudyPlanView: React.FC = () => {
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-purple-400 font-mono uppercase">
-                  {week.dayRange}
+                  {week.day}
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                  {week.estimatedHours} hrs
+                  {week.hours} hrs
                 </span>
               </div>
               <h4 className="text-xs font-bold text-white">
-                {week.focusTheme}
+                {week.focus}
               </h4>
               <ul className="space-y-1 text-[11px] text-slate-400">
-                {week.targetTopics.map((t, tIdx) => (
+                {week.focus.split(/,|&|\+/).map((t, tIdx) => (
                   <li key={tIdx} className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                    <span>{t}</span>
+                    <span>{t.trim()}</span>
                   </li>
                 ))}
               </ul>

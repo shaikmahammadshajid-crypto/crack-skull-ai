@@ -134,10 +134,10 @@ export const QuizView: React.FC = () => {
 
     activeQuiz.questions.forEach((q, idx) => {
       const userChoice = selectedAnswers[idx];
-      if (userChoice === q.correctOptionIndex) {
+      if (userChoice === q.correctIndex) {
         correctCount++;
       } else {
-        weakTopics.push(q.topicTag || activeQuiz.topic);
+        weakTopics.push(q.topic || activeQuiz.topic);
       }
     });
 
@@ -288,12 +288,12 @@ export const QuizView: React.FC = () => {
                   Question {currentQIndex + 1}
                 </span>
                 <span className="text-xs text-slate-400 font-mono">
-                  {currentQ?.topicTag || activeQuiz.topic}
+                  {currentQ?.topic || activeQuiz.topic}
                 </span>
               </div>
 
               <h2 className="text-base sm:text-lg font-bold text-white leading-relaxed">
-                {currentQ?.questionText}
+                {currentQ?.question}
               </h2>
             </div>
 
@@ -301,7 +301,7 @@ export const QuizView: React.FC = () => {
             <div className="space-y-2.5">
               {currentQ?.options.map((opt, optIdx) => {
                 const isThisSelected = userSelected === optIdx;
-                const isCorrect = optIdx === currentQ.correctOptionIndex;
+                const isCorrect = optIdx === currentQ.correctIndex;
 
                 let optionStyle = 'bg-slate-950/60 border-slate-800 hover:border-purple-500/40 text-slate-200';
                 if (isAnswered) {

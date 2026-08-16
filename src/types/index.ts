@@ -232,10 +232,13 @@ export interface CalendarEvent {
   id: string;
   title: string;
   subject?: string;
+  subjectName?: string;
   date: string;
   time?: string;
-  type: 'exam' | 'assignment' | 'study_session' | 'viva' | 'deadline';
+  type: 'exam' | 'assignment' | 'study_session' | 'viva' | 'deadline' | 'quiz' | 'submission' | 'study_block';
   priority: 'high' | 'medium' | 'low';
+  countdownDays?: number;
+  notes?: string;
 }
 
 export interface KnowledgeNode {

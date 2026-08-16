@@ -67,7 +67,7 @@ export const aiService = {
       return data.quiz || [];
     } catch (error) {
       console.error('Failed to generate quiz:', error);
-      return [];
+      return buildClientQuizFallback(params.subject, params.topic, params.difficulty, params.count || 5);
     }
   },
 
@@ -321,6 +321,70 @@ ${steps}
   }
 
   return null;
+}
+
+function buildClientQuizFallback(subject: string, topic: string, difficulty: 'easy' | 'medium' | 'hard' | 'adaptive', count: number): QuizQuestion[] {
+  const cleanTopic = topic || subject || 'Core Concepts';
+  const isOop = /(oops|oop|object oriented|object-oriented|class|inheritance|polymorphism|encapsulation)/i.test(cleanTopic);
+  const questions: QuizQuestion[] = isOop
+    ? [
+      {
+        id: 'client_oop_1',
+        type: 'mcq',
+        question: 'Which OOP principle hides internal data and exposes controlled access through methods?',
+        options: ['Encapsulation', 'Inheritance', 'Polymorphism', 'Compilation'],
+        correctIndex: 0,
+        explanation: 'Encapsulation protects object state by binding data with methods and limiting direct access.',
+        topic: cleanTopic,
+        difficulty,
+        marks: 2,
+      },
+      {
+        id: 'client_oop_2',
+        type: 'mcq',
+        question: 'Which OOP feature lets one interface behave differently for different object types?',
+        options: ['Polymorphism', 'Indexing', 'Normalization', 'Deadlock'],
+        correctIndex: 0,
+        explanation: 'Polymorphism enables different implementations to be invoked through a common interface.',
+        topic: cleanTopic,
+        difficulty,
+        marks: 2,
+      },
+    ]
+    : [
+      {
+        id: 'client_gen_1',
+        type: 'mcq',
+        question: `What is the strongest first step when answering "${cleanTopic}" in an exam?`,
+        options: ['Write a precise definition', 'Skip to the conclusion', 'Avoid examples', 'Write unrelated points'],
+        correctIndex: 0,
+        explanation: 'A precise definition anchors the answer and earns direct theory marks.',
+        topic: cleanTopic,
+        difficulty,
+        marks: 2,
+      },
+      {
+        id: 'client_gen_2',
+        type: 'mcq',
+        question: `Which structure gives a complete answer on "${cleanTopic}"?`,
+        options: ['Definition, principle, steps, example, applications, limitations', 'Only a heading', 'Only a diagram', 'Only keywords'],
+        correctIndex: 0,
+        explanation: 'Complete university answers combine concept clarity, method, and application.',
+        topic: cleanTopic,
+        difficulty,
+        marks: 2,
+      },
+    ];
+
+  while (questions.length < count) {
+    questions.push({
+      ...questions[questions.length % 2],
+      id: `client_fallback_${questions.length + 1}`,
+      question: `Practice ${questions.length + 1}: ${questions[questions.length % 2].question}`,
+    });
+  }
+
+  return questions.slice(0, count);
 }
 
 function extractDerivativeExpression(message: string): string | null {

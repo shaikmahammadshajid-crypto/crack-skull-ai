@@ -1,0 +1,41 @@
+{
+  "name": "Crack Skull AI Exam Copilot",
+  "short_name": "CrackSkull",
+  "description": "AI-powered study planner, exam radar, mock test, focus timer, and academic library for students.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "background_color": "#0B0F19",
+  "theme_color": "#0B0F19",
+  "orientation": "portrait-primary",
+  "categories": ["education", "productivity", "books"],
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "AI Tutor",
+      "short_name": "Tutor",
+      "url": "/?tab=ai-tutor",
+      "description": "Open the AI academic tutor"
+    },
+    {
+      "name": "Mock Test",
+      "short_name": "Quiz",
+      "url": "/?tab=quiz",
+      "description": "Start AI mock tests"
+    },
+    {
+      "name": "Focus Timer",
+      "short_name": "Focus",
+      "url": "/?tab=focus-timer",
+      "description": "Start distraction-blocking focus mode"
+    }
+  ]
+}

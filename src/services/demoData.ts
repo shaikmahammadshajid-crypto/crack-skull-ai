@@ -521,7 +521,7 @@ export const DEMO_CALENDAR_EVENTS: CalendarEvent[] = [
   { id: 'ev_5', title: 'ML Mini-Project Code Review', subject: 'Machine Learning', date: '2026-08-26', time: '11:00 AM', type: 'assignment', priority: 'medium' },
 ];
 
-export const DEMO_LIBRARY_RESOURCES: LibraryResource[] = [
+const CORE_LIBRARY_RESOURCES: LibraryResource[] = [
   {
     id: 'lib_1',
     title: 'Database System Concepts (Open Edition Compendium)',
@@ -843,6 +843,205 @@ export const DEMO_LIBRARY_RESOURCES: LibraryResource[] = [
     isBookmarked: true,
   },
 ];
+
+const LIBRARY_EXPANSION_SUBJECTS = [
+  {
+    category: 'Computer Science',
+    subject: 'Database Management Systems',
+    topics: ['ER modeling', 'relational algebra', 'SQL joins', 'normalization', 'transactions', 'indexing', 'query optimization', 'distributed databases', 'NoSQL systems', 'data warehousing'],
+    tags: ['DBMS', 'SQL', 'Transactions', 'Databases'],
+    gradient: 'from-purple-600 via-indigo-700 to-slate-900',
+  },
+  {
+    category: 'Computer Science',
+    subject: 'Operating Systems',
+    topics: ['process scheduling', 'memory management', 'deadlocks', 'file systems', 'virtual memory', 'synchronization', 'Linux internals', 'disk scheduling', 'threads', 'system calls'],
+    tags: ['OS', 'Processes', 'Memory', 'Concurrency'],
+    gradient: 'from-cyan-600 via-blue-700 to-slate-900',
+  },
+  {
+    category: 'Computer Science',
+    subject: 'Data Structures and Algorithms',
+    topics: ['arrays', 'linked lists', 'trees', 'graphs', 'dynamic programming', 'greedy algorithms', 'sorting', 'hashing', 'heaps', 'complexity analysis'],
+    tags: ['DSA', 'Algorithms', 'Coding', 'Complexity'],
+    gradient: 'from-amber-500 via-orange-700 to-slate-900',
+  },
+  {
+    category: 'AI and Data Science',
+    subject: 'Machine Learning',
+    topics: ['linear regression', 'classification', 'clustering', 'neural networks', 'backpropagation', 'PCA', 'SVM', 'decision trees', 'model evaluation', 'feature engineering'],
+    tags: ['ML', 'AI', 'Statistics', 'Python'],
+    gradient: 'from-emerald-500 via-teal-700 to-slate-900',
+  },
+  {
+    category: 'Mathematics',
+    subject: 'Engineering Mathematics',
+    topics: ['calculus', 'linear algebra', 'differential equations', 'Laplace transforms', 'Fourier series', 'probability', 'statistics', 'numerical methods', 'complex variables', 'discrete mathematics'],
+    tags: ['Math', 'Calculus', 'Algebra', 'Numericals'],
+    gradient: 'from-sky-600 via-cyan-700 to-slate-900',
+  },
+  {
+    category: 'Science',
+    subject: 'Physics',
+    topics: ['mechanics', 'thermodynamics', 'electromagnetism', 'waves', 'optics', 'modern physics', 'quantum basics', 'semiconductors', 'units and dimensions', 'lab experiments'],
+    tags: ['Physics', 'Mechanics', 'Electromagnetism', 'Numericals'],
+    gradient: 'from-indigo-600 via-blue-700 to-slate-900',
+  },
+  {
+    category: 'Science',
+    subject: 'Chemistry',
+    topics: ['chemical bonding', 'thermodynamics', 'equilibrium', 'kinetics', 'organic reactions', 'spectroscopy', 'electrochemistry', 'coordination compounds', 'polymer chemistry', 'analytical chemistry'],
+    tags: ['Chemistry', 'Organic', 'Physical Chemistry', 'Reactions'],
+    gradient: 'from-emerald-600 via-lime-700 to-slate-900',
+  },
+  {
+    category: 'Engineering',
+    subject: 'Electrical Engineering',
+    topics: ['circuit analysis', 'network theorems', 'AC machines', 'DC machines', 'power systems', 'control systems', 'signals', 'power electronics', 'measurements', 'renewable energy'],
+    tags: ['Electrical', 'Circuits', 'Power', 'Machines'],
+    gradient: 'from-yellow-500 via-amber-700 to-slate-900',
+  },
+  {
+    category: 'Engineering',
+    subject: 'Electronics and Communication',
+    topics: ['digital logic', 'analog circuits', 'signals and systems', 'communication systems', 'microprocessors', 'VLSI basics', 'embedded systems', 'antenna theory', 'DSP', 'control circuits'],
+    tags: ['ECE', 'Digital Logic', 'Signals', 'Communication'],
+    gradient: 'from-fuchsia-600 via-purple-700 to-slate-900',
+  },
+  {
+    category: 'Engineering',
+    subject: 'Mechanical Engineering',
+    topics: ['thermodynamics', 'fluid mechanics', 'strength of materials', 'machine design', 'manufacturing', 'heat transfer', 'IC engines', 'refrigeration', 'vibrations', 'CAD CAM'],
+    tags: ['Mechanical', 'Thermodynamics', 'Design', 'Manufacturing'],
+    gradient: 'from-red-600 via-stone-700 to-slate-900',
+  },
+  {
+    category: 'Engineering',
+    subject: 'Civil Engineering',
+    topics: ['structural analysis', 'surveying', 'soil mechanics', 'transportation', 'environmental engineering', 'concrete technology', 'hydrology', 'steel design', 'construction management', 'geotechnical engineering'],
+    tags: ['Civil', 'Structures', 'Surveying', 'Design'],
+    gradient: 'from-teal-600 via-slate-700 to-slate-900',
+  },
+  {
+    category: 'Health Sciences',
+    subject: 'Medicine and Nursing',
+    topics: ['anatomy', 'physiology', 'pathology', 'microbiology', 'pharmacology', 'community health', 'clinical skills', 'medical terminology', 'biochemistry', 'patient care'],
+    tags: ['Medicine', 'Nursing', 'Anatomy', 'Clinical'],
+    gradient: 'from-rose-600 via-pink-700 to-slate-900',
+  },
+  {
+    category: 'Commerce',
+    subject: 'Commerce and Finance',
+    topics: ['financial accounting', 'cost accounting', 'corporate finance', 'auditing', 'taxation', 'business law', 'banking', 'ratio analysis', 'capital budgeting', 'financial markets'],
+    tags: ['Commerce', 'Accounting', 'Finance', 'Business'],
+    gradient: 'from-green-600 via-emerald-700 to-slate-900',
+  },
+  {
+    category: 'Management',
+    subject: 'Business Administration',
+    topics: ['principles of management', 'marketing', 'human resources', 'operations', 'business strategy', 'entrepreneurship', 'organizational behavior', 'supply chain', 'business analytics', 'case studies'],
+    tags: ['MBA', 'Management', 'Marketing', 'Strategy'],
+    gradient: 'from-cyan-600 via-slate-700 to-slate-900',
+  },
+  {
+    category: 'Law',
+    subject: 'Law',
+    topics: ['constitutional law', 'contract law', 'torts', 'criminal law', 'legal method', 'jurisprudence', 'company law', 'intellectual property', 'evidence law', 'civil procedure'],
+    tags: ['Law', 'Contracts', 'Cases', 'Legal Method'],
+    gradient: 'from-slate-600 via-zinc-700 to-slate-900',
+  },
+  {
+    category: 'Humanities',
+    subject: 'English and Communication',
+    topics: ['grammar', 'academic writing', 'business communication', 'presentation skills', 'literary criticism', 'report writing', 'professional emails', 'vocabulary', 'comprehension', 'public speaking'],
+    tags: ['English', 'Communication', 'Writing', 'Grammar'],
+    gradient: 'from-blue-600 via-indigo-700 to-slate-900',
+  },
+  {
+    category: 'Social Sciences',
+    subject: 'Economics',
+    topics: ['microeconomics', 'macroeconomics', 'demand elasticity', 'national income', 'inflation', 'public finance', 'development economics', 'econometrics', 'international trade', 'policy analysis'],
+    tags: ['Economics', 'Graphs', 'Policy', 'Statistics'],
+    gradient: 'from-orange-500 via-red-700 to-slate-900',
+  },
+  {
+    category: 'Humanities',
+    subject: 'Psychology and Education',
+    topics: ['learning theories', 'memory', 'motivation', 'personality', 'developmental psychology', 'assessment', 'classroom management', 'counselling basics', 'research methods', 'educational technology'],
+    tags: ['Psychology', 'Education', 'Learning', 'Research'],
+    gradient: 'from-pink-600 via-rose-700 to-slate-900',
+  },
+  {
+    category: 'Exam Preparation',
+    subject: 'Aptitude and Reasoning',
+    topics: ['quantitative aptitude', 'logical reasoning', 'data interpretation', 'verbal ability', 'puzzles', 'number systems', 'percentages', 'time and work', 'probability shortcuts', 'placement interviews'],
+    tags: ['Aptitude', 'Reasoning', 'Placements', 'Practice'],
+    gradient: 'from-lime-600 via-green-700 to-slate-900',
+  },
+  {
+    category: 'Projects and Careers',
+    subject: 'Placement and Projects',
+    topics: ['resume building', 'technical interviews', 'project documentation', 'system design', 'GitHub portfolios', 'internship preparation', 'HR interviews', 'coding rounds', 'research papers', 'startup basics'],
+    tags: ['Placements', 'Projects', 'Career', 'Interview'],
+    gradient: 'from-violet-600 via-indigo-700 to-slate-900',
+  },
+];
+
+function generateExpandedLibraryResources(): LibraryResource[] {
+  const resources: LibraryResource[] = [];
+  LIBRARY_EXPANSION_SUBJECTS.forEach((subjectPack, subjectIndex) => {
+    subjectPack.topics.forEach((topic, topicIndex) => {
+      const variants = [
+        'Complete University Textbook and Exam Guide',
+        'Solved Problems and Theory Notes',
+        'Previous-Year Question Bank and Model Answers',
+        'Formula Handbook and Quick Revision Notes',
+        'Viva, Lab, and Assignment Companion',
+        'Beginner to Advanced Concept Workbook',
+        'Case Studies and Applied Examples',
+        'High-Yield 2/5/10 Mark Answer Manual',
+        'Diagrams, Tables, and Memory Maps',
+        'Practice Tests with Explanations',
+        'Crash Course Revision Sprint',
+        'Research and Reference Reader',
+        'Numerical Methods and Worked Examples',
+        'Definitions, Keywords, and Flash Notes',
+        'Project-Oriented Learning Pack',
+      ];
+
+      variants.forEach((variant, variantIndex) => {
+        const difficulty = variantIndex < 5 ? 'Beginner' : variantIndex < 11 ? 'Intermediate' : 'Advanced';
+        const id = `lib_auto_${subjectIndex + 1}_${topicIndex + 1}_${variantIndex + 1}`;
+        resources.push({
+          id,
+          title: `${titleCase(topic)}: ${variant}`,
+          author: `${subjectPack.subject} Open Academic Resource Network`,
+          category: subjectPack.category,
+          subject: subjectPack.subject,
+          difficulty,
+          pages: 120 + ((subjectIndex * 41 + topicIndex * 23 + variantIndex * 17) % 520),
+          fileFormat: variant.includes('Question') || variant.includes('Practice') ? 'Practice PDF / Question Bank' : 'Open Textbook / Study Notes',
+          description: `A student-focused ${subjectPack.subject} resource covering ${topic}, with clear theory, worked examples, exam keywords, revision checkpoints, and AI-ready doubt prompts.`,
+          tags: Array.from(new Set([...subjectPack.tags, titleCase(topic).split(' ')[0], variant.split(' ')[0]])).slice(0, 5),
+          license: 'Open Educational Resource Index / Public Academic Reference',
+          sourceUrl: 'https://open.umn.edu/opentextbooks',
+          coverGradient: subjectPack.gradient,
+          isBookmarked: false,
+        });
+      });
+    });
+  });
+  return resources;
+}
+
+export const DEMO_LIBRARY_RESOURCES: LibraryResource[] = [
+  ...CORE_LIBRARY_RESOURCES,
+  ...generateExpandedLibraryResources().slice(0, 460),
+];
+
+function titleCase(value: string): string {
+  return value.replace(/\b\w/g, char => char.toUpperCase());
+}
 
 export const DEMO_NOTIFICATIONS: NotificationItem[] = [
   {

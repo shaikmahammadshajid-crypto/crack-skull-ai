@@ -129,17 +129,19 @@ export const ExamRadarView: React.FC = () => {
       questions: [
         {
           id: 'rq1',
-          questionText: item.sampleQuestion,
+          type: 'mcq',
+          question: item.sampleQuestion,
           options: [
             'Standard Canonical Decomposition',
             'Precedence Serializability Graph',
             'Wait-For Dependency Cycle',
             'Strict Locking Boundary',
           ],
-          correctOptionIndex: 0,
+          correctIndex: 0,
           explanation: 'Exam-tested solution verified against 5-year university answer keys.',
-          topicTag: item.topic,
+          topic: item.topic,
           difficulty: 'hard',
+          marks: 10,
         },
       ],
       createdAt: new Date().toISOString(),
