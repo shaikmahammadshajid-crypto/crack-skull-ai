@@ -27,6 +27,7 @@ interface VoiceTurn {
 
 const agentOptions: { mode: ChatMode; label: string; helper: string }[] = [
   { mode: 'tutor', label: 'Tutor', helper: 'Explain a concept clearly' },
+  { mode: 'math', label: 'Math', helper: 'Solve step by step' },
   { mode: 'doubt-solver', label: 'Doubt', helper: 'Fix one confusion' },
   { mode: 'exam', label: 'Exam', helper: 'Write scoring answers' },
   { mode: 'pyq', label: 'PYQ', helper: 'Predict likely questions' },
@@ -36,6 +37,7 @@ const agentOptions: { mode: ChatMode; label: string; helper: string }[] = [
 
 const quickPrompts = [
   { label: 'Explain today topic', prompt: 'Explain the most important concept from my active subject for today with one example.' },
+  { label: 'Solve math', prompt: 'Solve this typical exam math problem step by step: x^2 - 5x + 6 = 0.' },
   { label: 'Make 2-hour plan', prompt: 'Create a practical 2-hour study plan for my active subject with breaks and revision.' },
   { label: 'Ask viva', prompt: 'Ask me five viva questions from my active subject, one by one.' },
   { label: 'Predict PYQ', prompt: 'Predict likely previous-year questions for my active subject and give answer skeletons.' },

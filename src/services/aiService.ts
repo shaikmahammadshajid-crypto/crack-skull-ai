@@ -1,5 +1,13 @@
-import { ChatMode, Quiz, QuizQuestion, VivaReport, ExamRadarData } from '../types';
+import { ChatMode, QuizQuestion, ExamRadarData } from '../types';
 import { getAssistantLanguage } from './languageService';
+
+export interface ChatAttachmentPayload {
+  name: string;
+  type: string;
+  kind: 'image' | 'document';
+  text?: string;
+  dataUrl?: string;
+}
 
 export interface ChatResponsePayload {
   reply: string;
@@ -17,6 +25,7 @@ export const aiService = {
     academicContext?: any;
     history?: { role: string; content: string }[];
     language?: string;
+    attachments?: ChatAttachmentPayload[];
   }): Promise<ChatResponsePayload> {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 45000);
@@ -171,12 +180,7 @@ export const aiService = {
     window.speechSynthesis.cancel(); // Stop any active speech
 
     // Clean markdown before speaking
-    const cleanText = text
-      .replace(/#+ /g, '')
-      .replace(/\*\*/g, '')
-      .replace(/```[\s\S]*?```/g, 'Code block omitted.')
-      .replace(/`([^`]+)`/g, '$1')
-      .slice(0, 500);
+    const cleanText = sanitizeTextForSpeech(text).slice(0, 900);
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.rate = 1.05;
@@ -211,6 +215,23 @@ export const aiService = {
     }
   },
 };
+
+function sanitizeTextForSpeech(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, ' Code block omitted. ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!\[[^\]]*]\([^)]+\)/g, '')
+    .replace(/\[([^\]]+)]\([^)]+\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+    .replace(/\|/g, ' ')
+    .replace(/[*_~>#]/g, '')
+    .replace(/={2,}/g, ' equals ')
+    .replace(/-{3,}/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 function buildClientFallbackReply(message: string, mode: ChatMode, subject = 'General academics'): string {
   const topic = message.trim() || subject;
@@ -265,6 +286,34 @@ Start the app server and configure an AI key such as \`GEMINI_API_KEY\` or \`NVI
 }
 
 function buildOfflineMathReply(message: string): string | null {
+  const quadratic = solveSimpleQuadratic(message);
+  if (quadratic) {
+    return `### Quadratic Equation: ${quadratic.display}
+
+#### Given
+\`\`\`text
+${quadratic.display}
+\`\`\`
+
+#### Formula
+\`\`\`text
+For ax^2 + bx + c = 0:
+x = (-b ± √(b^2 - 4ac)) / 2a
+\`\`\`
+
+#### Steps
+\`\`\`text
+a = ${quadratic.a}, b = ${quadratic.b}, c = ${quadratic.c}
+D = b^2 - 4ac
+D = (${quadratic.b})^2 - 4(${quadratic.a})(${quadratic.c})
+D = ${quadratic.discriminant}
+${quadratic.steps}
+\`\`\`
+
+#### Final Answer
+**Answer: ${quadratic.answer}**`;
+  }
+
   const definiteIntegral = message.match(/integrat(?:e|ion|al)?\s+(?:of\s+)?x\^?(\d+)\s+from\s+(-?\d+(?:\.\d+)?)\s+to\s+(-?\d+(?:\.\d+)?)/i);
   if (definiteIntegral) {
     const power = Number(definiteIntegral[1]);
@@ -321,6 +370,61 @@ ${steps}
   }
 
   return null;
+}
+
+function solveSimpleQuadratic(message: string): {
+  display: string;
+  a: number;
+  b: number;
+  c: number;
+  discriminant: number;
+  steps: string;
+  answer: string;
+} | null {
+  const compact = message.replace(/\s+/g, '').replace(/\*\*/g, '^');
+  const match = compact.match(/([+-]?(?:\d+(?:\.\d+)?)?)x\^2([+-](?:\d+(?:\.\d+)?)?)x([+-]\d+(?:\.\d+)?)=0/i);
+  if (!match) return null;
+
+  const parseCoeff = (value: string) => {
+    if (!value || value === '+') return 1;
+    if (value === '-') return -1;
+    return Number(value);
+  };
+
+  const a = parseCoeff(match[1]);
+  const b = parseCoeff(match[2]);
+  const c = Number(match[3]);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || !Number.isFinite(c) || a === 0) return null;
+
+  const discriminant = b * b - 4 * a * c;
+  const display = `${formatPolynomialTerm(a, 2)} ${b < 0 ? '-' : '+'} ${formatPolynomialTerm(Math.abs(b), 1)} ${c < 0 ? '-' : '+'} ${formatNumber(Math.abs(c))} = 0`;
+  if (discriminant < 0) {
+    const real = formatNumber(-b / (2 * a));
+    const imaginary = formatNumber(Math.sqrt(Math.abs(discriminant)) / (2 * a));
+    return {
+      display,
+      a,
+      b,
+      c,
+      discriminant,
+      steps: `Since D < 0, roots are complex.\nx = ${real} ± ${imaginary}i`,
+      answer: `x = ${real} ± ${imaginary}i`,
+    };
+  }
+
+  const sqrtD = Math.sqrt(discriminant);
+  const root1 = (-b + sqrtD) / (2 * a);
+  const root2 = (-b - sqrtD) / (2 * a);
+
+  return {
+    display,
+    a,
+    b,
+    c,
+    discriminant,
+    steps: `x = (-(${b}) ± √${discriminant}) / (2(${a}))\nx = (${formatNumber(-b)} ± ${formatNumber(sqrtD)}) / ${formatNumber(2 * a)}\nx1 = ${formatNumber(root1)}\nx2 = ${formatNumber(root2)}`,
+    answer: root1 === root2 ? `x = ${formatNumber(root1)}` : `x = ${formatNumber(root1)}, ${formatNumber(root2)}`,
+  };
 }
 
 function buildClientQuizFallback(subject: string, topic: string, difficulty: 'easy' | 'medium' | 'hard' | 'adaptive', count: number): QuizQuestion[] {

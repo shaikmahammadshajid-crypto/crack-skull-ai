@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { aiService } from '../../services/aiService';
 import { ChatMessage, ChatMode } from '../../types';
 import { AssistantLanguageCode, assistantLanguages, getAssistantLanguage } from '../../services/languageService';
+import { extractTextFromFile, extractTextFromPptx, formatFileSize, isPptxFile } from '../../services/pdfService';
 import {
   Bot,
   Send,
@@ -26,7 +27,25 @@ import {
   Target,
   Briefcase,
   HeartPulse,
+  Calculator,
+  Paperclip,
+  FileUp,
+  Presentation,
+  X,
 } from 'lucide-react';
+
+type AssistantAttachment = {
+  id: string;
+  name: string;
+  type: string;
+  kind: 'image' | 'document';
+  sizeLabel: string;
+  text?: string;
+  dataUrl?: string;
+  previewUrl?: string;
+  status: 'ready' | 'processing' | 'error';
+  error?: string;
+};
 
 export const AITutorView: React.FC = () => {
   const {
@@ -42,6 +61,8 @@ export const AITutorView: React.FC = () => {
   const [language, setLanguage] = useState<AssistantLanguageCode>('auto');
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [attachments, setAttachments] = useState<AssistantAttachment[]>([]);
+  const [attachmentError, setAttachmentError] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'm_welcome',
@@ -51,6 +72,7 @@ I am your dedicated academic copilot for **${activeSubject?.name || 'your univer
 
 Select a specialized mode from the top bar:
 * **Tutor Mode**: Deep step-by-step conceptual breakdowns & diagrams
+* **Math Solver**: Solves equations, calculus, matrices, probability, statistics, and word problems step by step
 * **Exam Mode**: High-scoring, concise, 10-mark structured answers
 * **Doubt Solver**: Finds the exact confusion and clears it fast
 * **PYQ Agent**: Predicts likely exam questions and answer skeletons
@@ -69,6 +91,7 @@ What topic would you like to master today?`,
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -80,24 +103,31 @@ What topic would you like to master today?`,
 
   const handleSend = async (customPrompt?: string) => {
     const text = customPrompt || inputMessage;
-    if (!text.trim() || isLoading) return;
+    const readyAttachments = attachments.filter(file => file.status === 'ready');
+    if ((!text.trim() && readyAttachments.length === 0) || isLoading) return;
+
+    const attachmentSummary = readyAttachments.length
+      ? `\n\nAttached files:\n${readyAttachments.map(file => `- ${file.name} (${file.kind}, ${file.sizeLabel})`).join('\n')}`
+      : '';
+    const messageText = `${text.trim() || 'Solve or explain the attached academic material.'}${attachmentSummary}`;
 
     const userMsg: ChatMessage = {
       id: `msg_${Date.now()}`,
       role: 'user',
-      content: text,
+      content: messageText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       mode,
     };
 
     setMessages(prev => [...prev, userMsg]);
     setInputMessage('');
+    setAttachments([]);
     setIsLoading(true);
 
     try {
       const historySummary = messages.slice(-4).map(m => ({ role: m.role, content: m.content }));
       const response = await aiService.sendMessage({
-        message: text,
+        message: text.trim() || 'Solve or explain the attached academic material.',
         mode,
         subject: activeSubject?.name || 'Academic Preparation',
         academicContext: {
@@ -107,6 +137,13 @@ What topic would you like to master today?`,
         },
         history: historySummary,
         language,
+        attachments: readyAttachments.map(file => ({
+          name: file.name,
+          type: file.type,
+          kind: file.kind,
+          text: file.text,
+          dataUrl: file.dataUrl,
+        })),
       });
 
       const aiMsg: ChatMessage = {
@@ -131,6 +168,85 @@ What topic would you like to master today?`,
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFilesSelected = async (fileList: FileList | null) => {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    setAttachmentError('');
+
+    for (const file of files) {
+      const lowerName = file.name.toLowerCase();
+      const isImage = /^image\/(png|jpe?g)$/.test(file.type) || /\.(png|jpe?g|jpng)$/.test(lowerName);
+      const isPdf = file.type === 'application/pdf' || lowerName.endsWith('.pdf');
+      const isPptx = isPptxFile(file);
+
+      if (!isImage && !isPdf && !isPptx) {
+        setAttachmentError('Upload only JPG, JPEG, JPNG, PNG, PDF, or PPTX files.');
+        continue;
+      }
+
+      if (file.size > 12 * 1024 * 1024) {
+        setAttachmentError(`${file.name} is too large. Keep each file under 12 MB.`);
+        continue;
+      }
+
+      const id = `att_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const baseAttachment: AssistantAttachment = {
+        id,
+        name: file.name,
+        type: file.type || (isPptx ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation' : 'application/octet-stream'),
+        kind: isImage ? 'image' : 'document',
+        sizeLabel: formatFileSize(file.size),
+        status: 'processing',
+      };
+
+      setAttachments(prev => [...prev, baseAttachment]);
+
+      try {
+        if (isImage) {
+          const dataUrl = await readFileAsDataUrl(file);
+          setAttachments(prev => prev.map(item => item.id === id ? {
+            ...item,
+            dataUrl,
+            previewUrl: dataUrl,
+            status: 'ready',
+          } : item));
+          continue;
+        }
+
+        if (isPdf) {
+          const extracted = await extractTextFromFile(file);
+          setAttachments(prev => prev.map(item => item.id === id ? {
+            ...item,
+            text: `PDF extracted text from ${file.name} (${extracted.pageCount} pages):\n${extracted.text.slice(0, 12000)}`,
+            status: 'ready',
+          } : item));
+          continue;
+        }
+
+        const extracted = await extractTextFromPptx(file);
+        setAttachments(prev => prev.map(item => item.id === id ? {
+          ...item,
+          text: `PPTX extracted text from ${file.name} (${extracted.slideCount} slides):\n${extracted.text.slice(0, 12000) || 'No selectable slide text was found.'}`,
+          status: 'ready',
+        } : item));
+      } catch (error: any) {
+        setAttachments(prev => prev.map(item => item.id === id ? {
+          ...item,
+          status: 'error',
+          error: error?.message || 'Could not read this file.',
+        } : item));
+      }
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(item => item.id !== id));
   };
 
   const copyText = (id: string, text: string) => {
@@ -202,7 +318,7 @@ What topic would you like to master today?`,
     a.click();
   };
 
-  const promptSuggestions = [
+  const basePromptSuggestions = [
     'Explain ACID properties with real-world banking example',
     'Derive BCNF decomposition step-by-step for R(A,B,C,D)',
     'Explain Two-Phase Locking (2PL) and draw precedence graph',
@@ -211,6 +327,14 @@ What topic would you like to master today?`,
     'Create a 3-day revision plan for my weakest DBMS topics',
     'Ask me 5 placement interview questions on React and Node.js',
   ];
+  const mathPromptSuggestions = [
+    'Solve x^2 - 5x + 6 = 0 step-by-step',
+    'Evaluate integral of x^3 from 0 to 2',
+    'Solve a matrix inverse problem and verify the answer',
+    'Explain Bayes theorem with a solved exam-style example',
+    'Solve this uploaded math question and show every step',
+  ];
+  const promptSuggestions = mode === 'math' ? mathPromptSuggestions : basePromptSuggestions;
 
   const currentLanguage = getAssistantLanguage(language);
 
@@ -225,6 +349,12 @@ What topic would you like to master today?`,
             active={mode === 'tutor'}
             onClick={() => setMode('tutor')}
             icon={<Bot size={14} />}
+          />
+          <ModeTab
+            label="Math Solver"
+            active={mode === 'math'}
+            onClick={() => setMode('math')}
+            icon={<Calculator size={14} className="text-cyan-300" />}
           />
           <ModeTab
             label="Exam Mode"
@@ -427,6 +557,47 @@ What topic would you like to master today?`,
 
       {/* 4. Bottom Input Bar */}
       <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950/90">
+        {(attachments.length > 0 || attachmentError) && (
+          <div className="mb-3 space-y-2">
+            {attachmentError && (
+              <div className="rounded-xl border border-rose-500/30 bg-rose-950/40 px-3 py-2 text-xs text-rose-200">
+                {attachmentError}
+              </div>
+            )}
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {attachments.map(file => (
+                  <div
+                    key={file.id}
+                    className="flex max-w-full items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-2.5 py-2 text-xs text-slate-200"
+                  >
+                    {file.previewUrl ? (
+                      <img src={file.previewUrl} alt="" className="h-8 w-8 rounded-lg object-cover" />
+                    ) : file.name.toLowerCase().endsWith('.pptx') ? (
+                      <Presentation size={18} className="text-orange-300" />
+                    ) : (
+                      <FileUp size={18} className="text-purple-300" />
+                    )}
+                    <div className="min-w-0">
+                      <div className="max-w-[180px] truncate font-bold">{file.name}</div>
+                      <div className={`text-[10px] ${file.status === 'error' ? 'text-rose-300' : 'text-slate-500'}`}>
+                        {file.status === 'processing' ? 'Reading...' : file.status === 'error' ? file.error : file.sizeLabel}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(file.id)}
+                      className="rounded-lg p-1 text-slate-500 hover:bg-slate-800 hover:text-white"
+                      title="Remove attachment"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -435,15 +606,31 @@ What topic would you like to master today?`,
           className="flex items-center gap-2"
         >
           <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".jpg,.jpeg,.jpng,.png,.pdf,.pptx,image/jpeg,image/png,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            onChange={event => handleFilesSelected(event.target.files)}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-3 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-purple-500/50 transition-colors"
+            title="Upload photo, PDF, or PPTX"
+          >
+            <Paperclip size={18} />
+          </button>
+          <input
             type="text"
-            placeholder={`Ask in ${mode.toUpperCase()} mode using ${currentLanguage.label}...`}
+            placeholder={mode === 'math' ? `Type a math problem or upload a question photo/PDF/PPTX...` : `Ask in ${mode.toUpperCase()} mode using ${currentLanguage.label}...`}
             value={inputMessage}
             onChange={e => setInputMessage(e.target.value)}
             className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 shadow-inner"
           />
           <button
             type="submit"
-            disabled={isLoading || !inputMessage.trim()}
+            disabled={isLoading || (!inputMessage.trim() && !attachments.some(file => file.status === 'ready')) || attachments.some(file => file.status === 'processing')}
             className="p-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 transition-all shadow-md shadow-purple-600/30 flex items-center justify-center"
           >
             <Send size={18} />
@@ -453,6 +640,15 @@ What topic would you like to master today?`,
     </div>
   );
 };
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Could not read image file.'));
+    reader.readAsDataURL(file);
+  });
+}
 
 const ModeTab: React.FC<{
   label: string;

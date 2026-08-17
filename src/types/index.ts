@@ -2,6 +2,7 @@ export type LearningStyle = 'visual' | 'reading' | 'practice' | 'interactive' | 
 export type StudyGoal = 'pass' | 'score_high' | 'rank' | 'understand_concepts' | 'competitive_exams' | 'placements' | 'interview_prep';
 export type ChatMode =
   | 'tutor'
+  | 'math'
   | 'exam'
   | 'beginner'
   | 'coding'

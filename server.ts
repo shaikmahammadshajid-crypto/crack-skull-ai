@@ -143,10 +143,19 @@ const languageNames: Record<string, string> = {
 // AI Chatbot endpoint with multilingual responses and specialized academic agents.
 app.post('/api/ai/chat', async (req, res) => {
   try {
-    const { message, mode, subject, academicContext, history, language = 'auto' } = req.body;
+    const { message, mode, subject, academicContext, history, language = 'auto', attachments = [] } = req.body;
     const ai = getGeminiClient();
     const responseLanguage = languageNames[language] || languageNames.auto;
     const multilingualRule = `Always answer in ${responseLanguage}. Preserve technical terms in English when they are standard exam or programming vocabulary, and add simple local-language explanations beside them when useful.`;
+    const normalizedAttachments = Array.isArray(attachments) ? attachments.slice(0, 5) : [];
+    const imageAttachments = normalizedAttachments.filter((file: any) => file?.kind === 'image' && typeof file.dataUrl === 'string');
+    const documentAttachmentText = normalizedAttachments
+      .filter((file: any) => file?.kind === 'document' && typeof file.text === 'string')
+      .map((file: any) => `Attachment: ${file.name || 'document'}\n${String(file.text).slice(0, 12000)}`)
+      .join('\n\n---\n\n');
+    const attachmentInstruction = normalizedAttachments.length
+      ? `Attached material is part of the student question. For images, inspect the visible question, equations, diagrams, handwriting, tables, or screenshots. For PDFs/PPTX, use the extracted text below. If an image is unreadable or the provider cannot inspect images, say that clearly and solve any visible/provided text.`
+      : '';
 
     const universityAnswerContract = `University answer quality contract:
 - First identify the exact topic and answer that topic directly. Do not give a generic template.
@@ -161,6 +170,18 @@ app.post('/api/ai/chat', async (req, res) => {
     const systemInstructions: Record<string, string> = {
       tutor: `You are Crack Skull AI Tutor - an elite, encouraging, and razor-sharp academic tutor for university students.
 Explain concepts step-by-step with intuitive analogies, structured points, visual ASCII or Markdown tables, and concrete examples. Focus on building deep conceptual understanding. Subject context: ${subject || 'General Engineering/Science'}.
+${universityAnswerContract}
+${multilingualRule}`,
+      math: `You are Crack Skull AI Math Solver.
+Solve every typical academic math problem the student gives: algebra, trigonometry, calculus, differential equations, matrices, vectors, probability, statistics, discrete math, numerical methods, physics-style formulas, and word problems.
+Rules:
+- Start with "Given" and "Required".
+- Write formulas/theorems before substitution.
+- Show every transformation step without skipping algebra.
+- For uploaded question photos, transcribe the problem first, then solve it.
+- Check domains, signs, units, and reasonableness.
+- Box the final answer and add a quick exam-tip.
+Subject context: ${subject || 'Mathematics / Quantitative Problem Solving'}.
 ${universityAnswerContract}
 ${multilingualRule}`,
       exam: `You are Crack Skull AI Exam Mode Copilot.
@@ -224,7 +245,43 @@ Previous history summary: ${Array.isArray(history) ? history.slice(-4).map((h: {
 
 Student question/prompt: ${message}
 
+${attachmentInstruction}
+${documentAttachmentText ? `Extracted PDF/PPTX attachment text:\n${documentAttachmentText}` : ''}
+
 Provide a comprehensive, ChatGPT-style Markdown response with clear headers, short paragraphs, bold keywords, code blocks, equations, worked steps, or tables where appropriate. Avoid vague filler and answer the student's exact question first.`;
+
+    const geminiParts = imageAttachments.length
+      ? [
+          { text: prompt },
+          ...imageAttachments.map((file: any) => {
+            const dataUrl = String(file.dataUrl);
+            const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+            return {
+              inlineData: {
+                mimeType: match?.[1] || file.type || 'image/png',
+                data: match?.[2] || dataUrl,
+              },
+            };
+          }),
+        ]
+      : null;
+    const geminiContents = geminiParts ? [{ role: 'user', parts: geminiParts }] : prompt;
+
+    const shouldPreferGeminiForVision = imageAttachments.length > 0 && ai;
+
+    if (shouldPreferGeminiForVision) {
+      const response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: geminiContents as any,
+        config: {
+          systemInstruction: chosenSystemInstruction,
+          temperature: 0.45,
+        },
+      });
+
+      const reply = response.text || 'Unable to inspect the uploaded image. Please try a clearer photo or type the problem.';
+      return res.json({ reply: enhanceAcademicReply(reply, message, subject), mode, isFallback: false, provider: 'gemini' });
+    }
 
     const nvidiaReply = await callNvidiaChat({
       system: chosenSystemInstruction,
@@ -248,7 +305,7 @@ Provide a comprehensive, ChatGPT-style Markdown response with clear headers, sho
 
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
-      contents: prompt,
+      contents: geminiContents as any,
       config: {
         systemInstruction: chosenSystemInstruction,
         temperature: 0.7,
@@ -740,6 +797,32 @@ function generateOfflineAiReply(message: string, mode: string, subject?: string,
   const knowledge = findTopicKnowledge(message, subject);
   const offlineMathReply = generateOfflineMathReply(message, subject, languageNote);
   if (offlineMathReply) return offlineMathReply;
+  if (mode === 'math') {
+    return `### Math Solver
+
+${languageNote}
+
+I could not reach the live AI model, so I cannot fully solve every arbitrary uploaded or typed math problem offline. Use this exact scoring format while the AI provider is unavailable.
+
+#### 1. Given
+- Copy the values, equations, diagram labels, or conditions from the question.
+- Write the required result clearly.
+
+#### 2. Formula / Theorem
+- Select the relevant identity, theorem, derivative/integral rule, matrix method, probability law, or statistical formula.
+- Define every symbol before substituting.
+
+#### 3. Step-by-Step Working
+1. Substitute known values.
+2. Simplify one line at a time.
+3. Check domain restrictions, signs, units, and special cases.
+4. Verify by substitution or dimensional check where possible.
+
+#### 4. Final Answer
+Box the final result and add one sentence explaining what it means.
+
+Live AI is needed for full image/PDF/PPTX problem solving. Add \`NVIDIA_API_KEY\`, \`Vibe_Coder\`, or \`GEMINI_API_KEY\` in Render/local env to enable exact solutions.`;
+  }
 
   if (cleanMsg.includes('binary search') || cleanMsg.includes('search algorithm')) {
     return `### Binary Search Algorithm
@@ -962,6 +1045,40 @@ function enhanceAcademicReply(reply: string, message: string, subject?: string):
 }
 
 function generateOfflineMathReply(message: string, subject = 'Mathematics', languageNote: string): string | null {
+  const quadratic = solveSimpleQuadratic(message);
+  if (quadratic) {
+    return `### Quadratic Equation: ${quadratic.display}
+
+${languageNote}
+
+#### 1. Given
+\`\`\`text
+${quadratic.display}
+\`\`\`
+
+#### 2. Formula Used
+For **ax² + bx + c = 0**, use the quadratic formula:
+
+\`\`\`text
+x = (-b ± √(b^2 - 4ac)) / 2a
+\`\`\`
+
+#### 3. Step-by-Step Solution
+\`\`\`text
+a = ${quadratic.a}, b = ${quadratic.b}, c = ${quadratic.c}
+D = b^2 - 4ac
+D = (${quadratic.b})^2 - 4(${quadratic.a})(${quadratic.c})
+D = ${quadratic.discriminant}
+${quadratic.steps}
+\`\`\`
+
+#### 4. Final Answer
+**Answer: ${quadratic.answer}**
+
+#### 5. Exam Note
+Always calculate the discriminant first. It tells whether the roots are real distinct, real equal, or complex.`;
+  }
+
   const definiteIntegral = message.match(/integrat(?:e|ion|al)?\s+(?:of\s+)?x\^?(\d+)\s+from\s+(-?\d+(?:\.\d+)?)\s+to\s+(-?\d+(?:\.\d+)?)/i);
   if (definiteIntegral) {
     const power = Number(definiteIntegral[1]);
@@ -1047,6 +1164,61 @@ ${steps}
   }
 
   return null;
+}
+
+function solveSimpleQuadratic(message: string): {
+  display: string;
+  a: number;
+  b: number;
+  c: number;
+  discriminant: number;
+  steps: string;
+  answer: string;
+} | null {
+  const compact = message.replace(/\s+/g, '').replace(/\*\*/g, '^');
+  const match = compact.match(/([+-]?(?:\d+(?:\.\d+)?)?)x\^2([+-](?:\d+(?:\.\d+)?)?)x([+-]\d+(?:\.\d+)?)=0/i);
+  if (!match) return null;
+
+  const parseCoeff = (value: string) => {
+    if (!value || value === '+') return 1;
+    if (value === '-') return -1;
+    return Number(value);
+  };
+
+  const a = parseCoeff(match[1]);
+  const b = parseCoeff(match[2]);
+  const c = Number(match[3]);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || !Number.isFinite(c) || a === 0) return null;
+
+  const discriminant = b * b - 4 * a * c;
+  const display = `${formatPolynomialTerm(a, 2)} ${b < 0 ? '-' : '+'} ${formatPolynomialTerm(Math.abs(b), 1)} ${c < 0 ? '-' : '+'} ${formatNumber(Math.abs(c))} = 0`;
+  if (discriminant < 0) {
+    const real = formatNumber(-b / (2 * a));
+    const imaginary = formatNumber(Math.sqrt(Math.abs(discriminant)) / Math.abs(2 * a));
+    return {
+      display,
+      a,
+      b,
+      c,
+      discriminant,
+      steps: `Since D < 0, roots are complex.\nx = ${real} ± ${imaginary}i`,
+      answer: `x = ${real} ± ${imaginary}i`,
+    };
+  }
+
+  const sqrtD = Math.sqrt(discriminant);
+  const root1 = (-b + sqrtD) / (2 * a);
+  const root2 = (-b - sqrtD) / (2 * a);
+
+  return {
+    display,
+    a,
+    b,
+    c,
+    discriminant,
+    steps: `x = (-(${b}) ± √${discriminant}) / (2(${a}))\nx = (${formatNumber(-b)} ± ${formatNumber(sqrtD)}) / ${formatNumber(2 * a)}\nx1 = ${formatNumber(root1)}\nx2 = ${formatNumber(root2)}`,
+    answer: root1 === root2 ? `x = ${formatNumber(root1)}` : `x = ${formatNumber(root1)}, ${formatNumber(root2)}`,
+  };
 }
 
 function extractDerivativeExpression(message: string): string | null {
