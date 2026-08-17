@@ -426,7 +426,7 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Tab Filter */}
-          <div className="flex items-center gap-1.5 overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-1.5 overflow-x-hidden">
             <button
               onClick={() => setActiveTab('all')}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${

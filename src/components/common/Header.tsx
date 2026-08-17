@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { CrackScoreGauge } from './CrackScoreGauge';
 import { StreakFlame } from './StreakFlame';
@@ -16,6 +16,7 @@ import {
   Menu,
   Download,
 } from 'lucide-react';
+import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 
 export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobileMenu }) => {
   const {
@@ -35,39 +36,14 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
 
   const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const { installApp, isStandalone, showIosHelp, setShowIosHelp } = useInstallPrompt();
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  useEffect(() => {
-    const standalone = window.matchMedia?.('(display-mode: standalone)').matches || (window.navigator as any).standalone;
-    setIsStandalone(Boolean(standalone));
-
-    const onBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event);
-    };
-
-    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
-  }, []);
-
-  const handleInstallApp = async () => {
-    if (installPrompt) {
-      installPrompt.prompt();
-      await installPrompt.userChoice.catch(() => null);
-      setInstallPrompt(null);
-      return;
-    }
-
-    alert('Install Crack Skull AI:\n\nAndroid/Chrome/Edge: tap browser menu > Install app.\nMac/Windows Chrome: address bar install icon or menu > Save and share > Install page as app.\niPhone/iPad Safari: Share button > Add to Home Screen.');
-  };
-
   return (
-    <header className="sticky top-0 z-20 h-16 bg-white/90 dark:bg-[#161922]/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 lg:px-6 flex items-center justify-between gap-4 transition-colors duration-150">
+    <header className="sticky top-0 z-20 h-14 sm:h-16 bg-white/90 dark:bg-[#161922]/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-2.5 sm:px-4 lg:px-6 flex items-center justify-between gap-2 sm:gap-4 transition-colors duration-150 max-w-full overflow-hidden">
       {/* Left: Mobile hamburger & Greeting / Subject Selector */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {/* Mobile menu button */}
         <button
           onClick={onOpenMobileMenu}
@@ -77,11 +53,11 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
         </button>
 
         {/* Mobile brand text */}
-        <div className="flex items-center gap-2 lg:hidden">
+        <div className="flex items-center gap-2 lg:hidden min-w-0">
           <div className="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center font-bold text-sm">
             CS
           </div>
-          <span className="font-bold text-sm text-gray-900 dark:text-white font-heading">
+          <span className="font-bold text-sm text-gray-900 dark:text-white font-heading truncate max-w-[104px] min-[380px]:max-w-[140px]">
             CrackSkull
           </span>
         </div>
@@ -148,11 +124,11 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
       </div>
 
       {/* Right: Quick actions, Crack Score, Notifications & Profile */}
-      <div className="flex items-center gap-2 sm:gap-2.5">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
         {/* Crack Mode quick badge */}
         <button
           onClick={toggleCrackMode}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+          className={`hidden min-[390px]:flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
             user.isCrackModeActive
               ? 'bg-orange-500 text-white shadow-xs'
               : 'bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700/80 text-gray-700 dark:text-gray-300 hover:border-orange-400'
@@ -166,7 +142,7 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
         </button>
 
         {/* Compact Crack Score dial */}
-        <div onClick={() => setActiveTab('dashboard')} className="cursor-pointer">
+        <div onClick={() => setActiveTab('dashboard')} className="hidden min-[430px]:block cursor-pointer">
           <CrackScoreGauge crackScore={crackScore} compact />
         </div>
 
@@ -178,7 +154,7 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
         {/* Voice Assistant Mic Button */}
         {!isStandalone && (
           <button
-            onClick={handleInstallApp}
+            onClick={installApp}
             className="p-2 rounded-full bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700/80 text-gray-600 dark:text-gray-300 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all shadow-xs"
             title="Install app on Android, iOS, Windows, or Mac"
           >
@@ -231,6 +207,29 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
           {user.name.slice(0, 2).toUpperCase()}
         </button>
       </div>
+      {showIosHelp && (
+        <div className="ios-install-panel p-4 space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-sm font-black">Install on iPhone</div>
+              <div className="mt-1 text-xs leading-relaxed text-slate-300">
+                Open this site in Safari, tap the Share button, then choose Add to Home Screen.
+              </div>
+            </div>
+            <button
+              onClick={() => setShowIosHelp(false)}
+              className="rounded-lg bg-white/10 px-2 py-1 text-xs font-bold text-white"
+            >
+              Close
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-bold text-slate-200">
+            <div className="rounded-xl bg-white/10 p-2">1. Safari</div>
+            <div className="rounded-xl bg-white/10 p-2">2. Share</div>
+            <div className="rounded-xl bg-white/10 p-2">3. Add</div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

@@ -177,7 +177,7 @@ export const ExamRadarView: React.FC = () => {
       </div>
 
       {/* Subject Filter Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex flex-wrap items-center gap-2 overflow-x-hidden pb-1">
         {subjects.map(sub => (
           <button
             key={sub.id}

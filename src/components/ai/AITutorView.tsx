@@ -219,7 +219,7 @@ What topic would you like to master today?`,
       {/* 1. Top Bar: Modes & Chat Tools */}
       <div className="p-3.5 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between gap-3 flex-wrap">
         {/* Mode Selector */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+        <div className="flex flex-wrap items-center gap-1.5 overflow-x-hidden py-0.5">
           <ModeTab
             label="Tutor"
             active={mode === 'tutor'}
@@ -409,7 +409,7 @@ What topic would you like to master today?`,
 
       {/* 3. Prompt Suggestions Pill Bar */}
       {messages.length <= 2 && (
-        <div className="px-4 py-2 border-t border-slate-800/60 bg-slate-950/40 flex items-center gap-2 overflow-x-auto">
+        <div className="px-4 py-2 border-t border-slate-800/60 bg-slate-950/40 flex flex-wrap items-center gap-2 overflow-x-hidden">
           <span className="text-[10px] font-bold text-slate-500 uppercase whitespace-nowrap">
             Suggested:
           </span>

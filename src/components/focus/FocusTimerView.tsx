@@ -232,7 +232,7 @@ export const FocusTimerView: React.FC = () => {
       {/* Main Timer Dial Card */}
       <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-[#13192B] to-[#0A0D18] border border-cyan-500/30 shadow-2xl text-center flex flex-col items-center space-y-6">
         {/* Mode Selector Tabs */}
-        <div className="flex items-center gap-2 p-1 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
+        <div className="flex flex-wrap items-center justify-center gap-2 p-1 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
           <button
             onClick={() => !focusLocked && setMode('study25')}
             disabled={focusLocked}
@@ -263,7 +263,7 @@ export const FocusTimerView: React.FC = () => {
         </div>
 
         {/* Large Digital Clock Display */}
-        <div className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
+        <div className="relative w-[min(16rem,78vw)] h-[min(16rem,78vw)] sm:w-72 sm:h-72 flex items-center justify-center">
           <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 120 120">
             <circle
               cx="60"

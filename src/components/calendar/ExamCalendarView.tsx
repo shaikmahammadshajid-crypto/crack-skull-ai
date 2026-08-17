@@ -113,7 +113,7 @@ export const ExamCalendarView: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-2 overflow-x-auto">
+      <div className="flex flex-wrap items-center gap-2 overflow-x-hidden">
         <span className="text-xs font-bold text-slate-400 flex items-center gap-1">
           <Filter size={14} /> Filter:
         </span>

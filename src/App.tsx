@@ -69,7 +69,7 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F8F9FA] dark:bg-[#0F1117] text-[#1A1A1A] dark:text-gray-100 font-sans selection:bg-gray-900 selection:text-white transition-colors duration-150">
+    <div className="flex min-h-screen max-w-[100vw] overflow-x-hidden bg-[#F8F9FA] dark:bg-[#0F1117] text-[#1A1A1A] dark:text-gray-100 font-sans selection:bg-gray-900 selection:text-white transition-colors duration-150">
       {/* Desktop Sidebar */}
       <Sidebar />
 
@@ -81,7 +81,7 @@ const MainLayout: React.FC = () => {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="w-72 h-full bg-white dark:bg-[#161922] border-r border-gray-200 dark:border-gray-800 p-5 flex flex-col justify-between shadow-2xl"
+            className="w-[min(18rem,88vw)] h-full bg-white dark:bg-[#161922] border-r border-gray-200 dark:border-gray-800 p-5 flex flex-col justify-between shadow-2xl"
           >
             <div className="space-y-5">
               <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-800">
@@ -142,10 +142,10 @@ const MainLayout: React.FC = () => {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden">
         <Header onOpenMobileMenu={() => setMobileDrawerOpen(true)} />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto bg-[#F8F9FA] dark:bg-[#0F1117]">
+        <main className="flex-1 w-full max-w-full p-3 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden bg-[#F8F9FA] dark:bg-[#0F1117]">
           {renderActiveView()}
         </main>
 

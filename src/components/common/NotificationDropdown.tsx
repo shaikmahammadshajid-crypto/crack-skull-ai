@@ -19,7 +19,7 @@ export const NotificationDropdown: React.FC<{ onClose: () => void }> = ({ onClos
   };
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed sm:absolute right-2 left-2 sm:left-auto sm:right-0 top-16 sm:top-full sm:mt-2 sm:w-96 max-w-[calc(100vw-1rem)] rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-200">
       <div className="flex items-center justify-between pb-2 border-b border-slate-800">
         <div className="flex items-center gap-2">
           <Bell size={16} className="text-purple-400" />

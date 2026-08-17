@@ -1,5 +1,12 @@
-const CACHE_NAME = 'crack-skull-ai-v2';
-const APP_SHELL = ['/', '/manifest.webmanifest', '/pwa-icon.svg'];
+const CACHE_NAME = 'crack-skull-ai-v3';
+const APP_SHELL = [
+  '/',
+  '/manifest.webmanifest',
+  '/pwa-icon.svg',
+  '/pwa-icon-192.png',
+  '/pwa-icon-512.png',
+  '/apple-touch-icon.png',
+];
 
 self.addEventListener('install', event => {
   event.waitUntil(
