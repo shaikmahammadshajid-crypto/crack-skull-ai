@@ -286,7 +286,7 @@ Provide a comprehensive, ChatGPT-style Markdown response with clear headers, sho
       });
 
       const reply = response.text || 'Unable to inspect the uploaded image. Please try a clearer photo or type the problem.';
-      return res.json({ reply: enhanceAcademicReply(reply, message, subject), mode, isFallback: false, provider: 'gemini' });
+      return res.json({ reply: enhanceAcademicReply(reply, message, subject, mode), mode, isFallback: false, provider: 'gemini' });
     }
 
     const nvidiaReply = await callNvidiaChat({
@@ -297,7 +297,7 @@ Provide a comprehensive, ChatGPT-style Markdown response with clear headers, sho
     });
 
     if (nvidiaReply) {
-      return res.json({ reply: enhanceAcademicReply(nvidiaReply, message, subject), mode, isFallback: false, provider: 'nvidia' });
+      return res.json({ reply: enhanceAcademicReply(nvidiaReply, message, subject, mode), mode, isFallback: false, provider: 'nvidia' });
     }
 
     if (!ai) {
@@ -319,7 +319,7 @@ Provide a comprehensive, ChatGPT-style Markdown response with clear headers, sho
     });
 
     const reply = response.text || 'Unable to generate response. Please try again.';
-    res.json({ reply: enhanceAcademicReply(reply, message, subject), mode, isFallback: false, provider: 'gemini' });
+    res.json({ reply: enhanceAcademicReply(reply, message, subject, mode), mode, isFallback: false, provider: 'gemini' });
   } catch (error: any) {
     console.error('Chat API Error:', error);
     res.status(500).json({
@@ -1039,7 +1039,11 @@ ${viva}
 Live AI is not configured or reachable on this deployment right now, so this is the improved offline academic fallback. Add \`NVIDIA_API_KEY\`, \`Vibe_Coder\`, or \`GEMINI_API_KEY\` in your environment to enable full exact AI responses.`;
 }
 
-function enhanceAcademicReply(reply: string, message: string, subject?: string): string {
+function enhanceAcademicReply(reply: string, message: string, subject?: string, mode?: string): string {
+  if (mode === 'math') {
+    return reply;
+  }
+
   const knowledge = findTopicKnowledge(message, subject);
   if (!knowledge.examKeywords.length || reply.includes('Verified University Checklist')) {
     return reply;
