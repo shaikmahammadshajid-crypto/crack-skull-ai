@@ -83,26 +83,26 @@ export const FlashcardsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-16 max-w-4xl mx-auto">
+    <div className="view-stack max-w-5xl space-y-5">
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-950/40 via-purple-950/40 to-slate-900/60 border border-amber-500/30 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="view-hero flex flex-col items-start justify-between gap-4 p-5 sm:p-6 md:flex-row md:items-center">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
               <Layers size={22} />
             </div>
-            <h1 className="text-2xl font-extrabold font-heading text-white tracking-tight">
+            <h1 className="view-title text-2xl">
               Spaced Repetition Flashcards
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300">
+          <p className="view-copy text-xs sm:text-sm">
             Active recall & spaced revision algorithm to commit proofs, definitions, and code syntax to permanent memory.
           </p>
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/30 flex items-center gap-1.5 transition-all"
+          className="primary-action bg-amber-500 px-4 py-2.5 text-xs text-gray-950 hover:bg-amber-400 dark:bg-amber-400 dark:text-gray-950"
         >
           <Plus size={16} />
           <span>Add New Card</span>
@@ -110,16 +110,16 @@ export const FlashcardsView: React.FC = () => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="segmented-control">
           <button
             onClick={() => {
               setActiveTab('all');
               setCurrentIdx(0);
               setIsFlipped(false);
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-              activeTab === 'all' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400'
+            className={`segmented-option ${
+              activeTab === 'all' ? 'segmented-option-active' : ''
             }`}
           >
             All Decks ({flashcards.length})
@@ -130,8 +130,8 @@ export const FlashcardsView: React.FC = () => {
               setCurrentIdx(0);
               setIsFlipped(false);
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-              activeTab === 'unmastered' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400'
+            className={`segmented-option ${
+              activeTab === 'unmastered' ? 'segmented-option-active' : ''
             }`}
           >
             Needs Review ({flashcards.filter(f => !f.isMastered).length})
@@ -142,8 +142,8 @@ export const FlashcardsView: React.FC = () => {
               setCurrentIdx(0);
               setIsFlipped(false);
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-              activeTab === 'mastered' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400'
+            className={`segmented-option ${
+              activeTab === 'mastered' ? 'segmented-option-active' : ''
             }`}
           >
             Mastered ({flashcards.filter(f => f.isMastered).length})
@@ -151,7 +151,7 @@ export const FlashcardsView: React.FC = () => {
         </div>
 
         {filteredCards.length > 0 && (
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="font-mono text-xs text-[var(--app-text-muted)]">
             Card {currentIdx + 1} of {filteredCards.length}
           </span>
         )}
@@ -162,29 +162,29 @@ export const FlashcardsView: React.FC = () => {
         <div className="space-y-6">
           <div
             onClick={() => setIsFlipped(prev => !prev)}
-            className="cursor-pointer min-h-[280px] sm:min-h-[320px] rounded-3xl p-8 bg-gradient-to-b from-[#13192B] to-[#0A0D18] border border-amber-500/30 shadow-2xl flex flex-col justify-between select-none transition-all duration-300 hover:border-amber-400/60 relative group"
+            className="surface-card-strong group relative flex min-h-[280px] cursor-pointer select-none flex-col justify-between p-6 transition-colors hover:border-amber-400 sm:min-h-[320px] sm:p-8"
           >
             {/* Top Card Info */}
             <div className="flex items-center justify-between text-xs">
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 font-mono text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                 {currentCard.topic}
               </span>
-              <span className="text-slate-400 font-mono text-[11px]">
+              <span className="font-mono text-[11px] text-[var(--app-text-muted)]">
                 {isFlipped ? 'Answer (Click to Flip Back)' : 'Question (Click to Reveal)'}
               </span>
             </div>
 
             {/* Central Content */}
             <div className="text-center py-6">
-              <h3 className="text-lg sm:text-xl font-bold text-white leading-relaxed font-heading">
+              <h3 className="font-heading text-lg font-black leading-relaxed text-[var(--app-text)] sm:text-xl">
                 {isFlipped ? currentCard.back : currentCard.front}
               </h3>
             </div>
 
             {/* Bottom Hint */}
-            <div className="flex items-center justify-between text-slate-500 text-xs border-t border-slate-800/80 pt-3">
+            <div className="flex items-center justify-between border-t border-[var(--app-border)] pt-3 text-xs text-[var(--app-text-muted)]">
               <span>{currentCard.subjectName}</span>
-              <span className="flex items-center gap-1 text-amber-400 group-hover:text-amber-300">
+              <span className="flex items-center gap-1 text-amber-700 group-hover:text-amber-800 dark:text-amber-300 dark:group-hover:text-amber-200">
                 <RotateCw size={13} />
                 <span>Tap card to flip</span>
               </span>
@@ -196,21 +196,21 @@ export const FlashcardsView: React.FC = () => {
             <div className="grid grid-cols-3 gap-3 animate-in fade-in">
               <button
                 onClick={() => handleMastery(false, 'hard')}
-                className="p-3 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-rose-300 hover:bg-rose-900/50 text-xs font-bold transition-colors"
+                className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-black text-rose-700 transition-colors hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200"
               >
-                🔴 Again (1 min)
+                Again (1 min)
               </button>
               <button
                 onClick={() => handleMastery(true, 'medium')}
-                className="p-3 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-amber-300 hover:bg-amber-900/50 text-xs font-bold transition-colors"
+                className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-black text-amber-700 transition-colors hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
               >
-                🟡 Good (1 day)
+                Good (1 day)
               </button>
               <button
                 onClick={() => handleMastery(true, 'easy')}
-                className="p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-900/50 text-xs font-bold transition-colors"
+                className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs font-black text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
               >
-                🟢 Easy (4 days)
+                Easy (4 days)
               </button>
             </div>
           )}
@@ -219,14 +219,14 @@ export const FlashcardsView: React.FC = () => {
           <div className="flex items-center justify-between pt-2">
             <button
               onClick={handlePrev}
-              className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center gap-1 text-xs"
+              className="secondary-action px-4 py-2 text-xs"
             >
               <ArrowLeft size={14} />
               <span>Previous</span>
             </button>
             <button
               onClick={handleNext}
-              className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center gap-1 text-xs"
+              className="secondary-action px-4 py-2 text-xs"
             >
               <span>Next</span>
               <ArrowRight size={14} />
@@ -234,34 +234,34 @@ export const FlashcardsView: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="p-12 text-center rounded-3xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
+        <div className="surface-muted p-12 text-center text-xs text-[var(--app-text-muted)]">
           No flashcards in this category. Click "+ Add New Card" or highlight text in the PDF Studio to create one!
         </div>
       )}
 
       {/* Add Flashcard Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-white font-heading">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 p-4 backdrop-blur-sm">
+          <div className="surface-card-strong w-full max-w-lg space-y-4 p-6">
+            <h3 className="font-heading text-base font-black text-[var(--app-text)]">
               Create New Flashcard
             </h3>
 
             <form onSubmit={handleAddCard} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="mb-1 block font-semibold text-[var(--app-text-muted)]">
                   Topic Tag
                 </label>
                 <input
                   type="text"
                   value={newTopic}
                   onChange={e => setNewTopic(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  className="form-control w-full px-3 py-2"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="mb-1 block font-semibold text-[var(--app-text-muted)]">
                   Front (Prompt / Question / Theorem)
                 </label>
                 <textarea
@@ -269,12 +269,12 @@ export const FlashcardsView: React.FC = () => {
                   value={newFront}
                   onChange={e => setNewFront(e.target.value)}
                   placeholder="e.g. State the condition for a relational schema to be in BCNF."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  className="form-control w-full px-3 py-2"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label className="mb-1 block font-semibold text-[var(--app-text-muted)]">
                   Back (Model Answer / Key Points)
                 </label>
                 <textarea
@@ -282,7 +282,7 @@ export const FlashcardsView: React.FC = () => {
                   value={newBack}
                   onChange={e => setNewBack(e.target.value)}
                   placeholder="e.g. For every non-trivial FD X -> Y, X must be a superkey."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  className="form-control w-full px-3 py-2"
                 />
               </div>
 
@@ -290,13 +290,13 @@ export const FlashcardsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white"
+                  className="secondary-action px-4 py-2"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/30"
+                  className="primary-action bg-amber-500 px-5 py-2 text-gray-950 hover:bg-amber-400 dark:bg-amber-400 dark:text-gray-950"
                 >
                   Save Flashcard
                 </button>

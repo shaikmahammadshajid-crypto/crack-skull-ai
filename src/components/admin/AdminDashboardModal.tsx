@@ -31,13 +31,20 @@ export const AdminDashboardModal: React.FC = () => {
       code: newSubCode,
       semester: newSubSem,
       examDate: '2026-06-10',
-      totalUnits: 5,
-      completedUnits: 1,
       masteryPercentage: 50,
+      syllabusCoverage: 20,
       color: 'purple',
+      icon: 'BookOpen',
+      units: [
+        {
+          unitNumber: 1,
+          title: 'Unit 1 Core Theory',
+          topics: ['Unit 1 Core Theory'],
+          isCompleted: false,
+        },
+      ],
       weakTopics: ['Unit 1 Core Theory'],
-      highYieldTopics: ['Important 10-markers'],
-      pyqProbability: 80,
+      strongTopics: ['Important 10-markers'],
     });
 
     setNewSubName('');

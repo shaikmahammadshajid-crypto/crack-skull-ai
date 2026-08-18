@@ -43,40 +43,40 @@ export const StudyPlanView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-16 max-w-6xl mx-auto">
+    <div className="view-stack space-y-5">
       {/* 1. Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-950/50 via-slate-900/60 to-slate-900/40 border border-purple-500/30 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="view-hero flex flex-col items-start justify-between gap-4 p-5 sm:p-6 md:flex-row md:items-center">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300">
               <CalendarCheck size={22} />
             </div>
-            <h1 className="text-2xl font-extrabold font-heading text-white tracking-tight">
+            <h1 className="view-title text-2xl">
               {studyPlan.modeName}
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300">
-            Target Exam: <strong className="text-white">{studyPlan.targetExam}</strong> • {studyPlan.daysRemaining} Days Countdown • {user.dailyHours} hrs/day allocation
+          <p className="view-copy text-xs sm:text-sm">
+            Target Exam: <strong className="text-[var(--app-text)]">{studyPlan.targetExam}</strong> • {studyPlan.daysRemaining} Days Countdown • {user.dailyHours} hrs/day allocation
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={toggleCrackMode}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-bold font-heading flex items-center gap-2 transition-all ${
+            className={`px-4 py-2.5 text-xs ${
               user.isCrackModeActive
-                ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30 animate-pulse'
-                : 'bg-slate-900 border border-orange-500/40 text-orange-400 hover:bg-orange-500/10'
+                ? 'primary-action bg-orange-500 text-white hover:bg-orange-600 dark:bg-orange-500 dark:text-white'
+                : 'secondary-action hover:border-orange-300'
             }`}
           >
-            <Zap size={16} className={user.isCrackModeActive ? 'fill-white' : ''} />
-            <span>{user.isCrackModeActive ? '⚡ 3-DAY CRACK MODE' : 'SWITCH TO CRACK SPRINT'}</span>
+            <Zap size={16} className={user.isCrackModeActive ? 'fill-white' : 'text-orange-500'} />
+            <span>{user.isCrackModeActive ? '3-Day Crack Mode' : 'Switch to Crack Sprint'}</span>
           </button>
 
           <button
             onClick={handleRegenerate}
             disabled={regenerating}
-            className="px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-700 text-slate-200 hover:text-white hover:border-purple-500 text-xs font-semibold flex items-center gap-2 transition-all"
+            className="secondary-action px-4 py-2.5 text-xs disabled:opacity-50"
           >
             <RotateCcw size={14} className={regenerating ? 'animate-spin' : ''} />
             <span>{regenerating ? 'Optimizing...' : 'Regenerate Plan'}</span>
@@ -85,33 +85,33 @@ export const StudyPlanView: React.FC = () => {
       </div>
 
       {/* 2. Today's Progress Meter */}
-      <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-3">
+      <div className="surface-card space-y-3 p-5">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-white flex items-center gap-2">
-            <Target size={16} className="text-purple-400" />
+          <span className="flex items-center gap-2 font-black text-[var(--app-text)]">
+            <Target size={16} className="text-teal-700 dark:text-teal-300" />
             <span>Today's Completion Progress: {completedCount} of {totalTasks} Tasks</span>
           </span>
-          <span className="font-mono font-bold text-purple-400">{progressPercent}% Done</span>
+          <span className="font-mono font-black text-teal-700 dark:text-teal-300">{progressPercent}% Done</span>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full h-3 rounded-full bg-slate-950 overflow-hidden p-0.5 border border-slate-800">
+        <div className="progress-track h-3 w-full p-0.5">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-400 transition-all duration-500 shadow-sm shadow-purple-500/50"
+            className="progress-fill"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
 
-        <div className="text-[11px] text-slate-400 flex items-center justify-between">
+        <div className="flex items-center justify-between text-[11px] text-[var(--app-text-muted)]">
           <span>{studyPlan.crackTip}</span>
-          <span className="font-mono text-slate-500">Updated today</span>
+          <span className="font-mono text-[var(--app-text-subtle)]">Updated today</span>
         </div>
       </div>
 
       {/* 3. Today's Task Agenda List */}
       <div className="space-y-3">
-        <h3 className="text-sm font-bold font-heading text-white flex items-center gap-2">
-          <Clock size={16} className="text-purple-400" />
+        <h3 className="flex items-center gap-2 font-heading text-sm font-black text-[var(--app-text)]">
+          <Clock size={16} className="text-teal-700 dark:text-teal-300" />
           <span>Today's Time-Blocked Study Schedule</span>
         </h3>
 
@@ -119,17 +119,17 @@ export const StudyPlanView: React.FC = () => {
           {studyPlan.todayTasks.map(task => (
             <div
               key={task.id}
-              className={`p-5 rounded-3xl border transition-all ${
+              className={`border p-5 transition-colors ${
                 task.isCompleted
-                  ? 'bg-slate-950/40 border-slate-800/60 opacity-60'
-                  : 'bg-slate-900/90 border-slate-800 hover:border-purple-500/40 shadow-sm'
+                  ? 'surface-muted opacity-60'
+                  : 'surface-card hover:border-[var(--app-border-strong)]'
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">
                   <button
                     onClick={() => toggleStudyTask(task.id)}
-                    className="mt-0.5 text-slate-400 hover:text-purple-400 transition-colors"
+                    className="mt-0.5 text-[var(--app-text-subtle)] transition-colors hover:text-teal-700 dark:hover:text-teal-300"
                   >
                     {task.isCompleted ? (
                       <CheckCircle2 size={22} className="text-emerald-400 fill-emerald-400/20" />
@@ -140,10 +140,10 @@ export const StudyPlanView: React.FC = () => {
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-bold text-white">
+                      <span className="text-sm font-black text-[var(--app-text)]">
                         {task.topic}
                       </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-purple-950 text-purple-300 border border-purple-800/50 font-mono">
+                      <span className="status-pill font-mono">
                         {task.subject}
                       </span>
                       <span
@@ -159,15 +159,15 @@ export const StudyPlanView: React.FC = () => {
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-300">
+                    <p className="view-copy text-xs">
                       {task.reason}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-400 font-mono flex items-center gap-1">
-                    <Clock size={14} className="text-cyan-400" />
+                  <span className="flex items-center gap-1 font-mono text-xs text-[var(--app-text-muted)]">
+                    <Clock size={14} className="text-teal-700 dark:text-teal-300" />
                     {task.durationMinutes} mins
                   </span>
 
@@ -178,7 +178,7 @@ export const StudyPlanView: React.FC = () => {
                         else if (task.type === 'flashcards') setActiveTab('flashcards');
                         else setActiveTab('ai-tutor');
                       }}
-                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-purple-600/30 transition-all"
+                      className="primary-action px-4 py-2 text-xs"
                     >
                       <Play size={13} />
                       <span>Start Session</span>
@@ -192,13 +192,13 @@ export const StudyPlanView: React.FC = () => {
       </div>
 
       {/* 4. Weekly Milestone Roadmap */}
-      <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-4">
+      <div className="surface-card space-y-4 p-5 sm:p-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold font-heading text-white flex items-center gap-2">
-            <TrendingUp size={16} className="text-cyan-400" />
+          <h3 className="flex items-center gap-2 font-heading text-sm font-black text-[var(--app-text)]">
+            <TrendingUp size={16} className="text-blue-600 dark:text-blue-300" />
             <span>Weekly Exam Sprint Roadmap</span>
           </h3>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="font-mono text-xs text-[var(--app-text-muted)]">
             {studyPlan.weeklyRoadmap.length} Stages Planned
           </span>
         </div>
@@ -207,23 +207,23 @@ export const StudyPlanView: React.FC = () => {
           {studyPlan.weeklyRoadmap.map((week, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-2 hover:border-purple-500/30 transition-colors"
+              className="surface-muted space-y-2 p-4 transition-colors hover:border-[var(--app-border-strong)]"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-purple-400 font-mono uppercase">
+                <span className="font-mono text-xs font-black uppercase text-teal-700 dark:text-teal-300">
                   {week.day}
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
+                <span className="status-pill font-mono">
                   {week.hours} hrs
                 </span>
               </div>
-              <h4 className="text-xs font-bold text-white">
+              <h4 className="text-xs font-black text-[var(--app-text)]">
                 {week.focus}
               </h4>
-              <ul className="space-y-1 text-[11px] text-slate-400">
+              <ul className="space-y-1 text-[11px] text-[var(--app-text-muted)]">
                 {week.focus.split(/,|&|\+/).map((t, tIdx) => (
                   <li key={tIdx} className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
                     <span>{t.trim()}</span>
                   </li>
                 ))}

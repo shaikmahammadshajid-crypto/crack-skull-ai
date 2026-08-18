@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { aiService } from '../../services/aiService';
 import { extractConceptTags, extractTextFromFile, formatFileSize } from '../../services/pdfService';
 import { DocumentItem } from '../../types';
+import { MarkdownAnswer } from '../common/MarkdownAnswer';
 import {
   FileText,
   Upload,
@@ -183,18 +184,18 @@ export const DocumentStudioView: React.FC = () => {
   // 1. If a document is currently selected for the interactive reader:
   if (selectedDocForReader) {
     return (
-      <div className="flex flex-col h-[calc(100vh-8rem)] max-w-7xl mx-auto rounded-3xl bg-[#0E1322] border border-slate-800 shadow-2xl overflow-hidden animate-in fade-in">
+      <div className="surface-card mx-auto flex h-[calc(100vh-7rem)] max-w-7xl flex-col overflow-hidden animate-in fade-in">
         {/* Reader Top Bar */}
-        <div className="p-4 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 border-b border-[var(--app-border)] bg-[var(--app-surface)] p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
               <FileText size={18} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white font-heading truncate max-w-md">
+              <h3 className="max-w-md truncate font-heading text-sm font-black text-[var(--app-text)]">
                 {selectedDocForReader.title}
               </h3>
-              <div className="text-[11px] text-slate-400 font-mono">
+              <div className="font-mono text-[11px] text-[var(--app-text-muted)]">
                 {selectedDocForReader.subjectName} • {selectedDocForReader.pageCount} Pages • {selectedDocForReader.fileSize}
               </div>
             </div>
@@ -203,14 +204,14 @@ export const DocumentStudioView: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleAiAction('quiz')}
-              className="px-3 py-1.5 rounded-xl bg-pink-600/20 hover:bg-pink-600 text-pink-300 hover:text-white border border-pink-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+              className="secondary-action px-3 py-1.5 text-xs"
             >
               <HelpCircle size={14} />
               <span>Generate Quiz</span>
             </button>
             <button
               onClick={closeDocumentReader}
-              className="p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+              className="icon-button icon-button-sm"
             >
               <X size={18} />
             </button>
@@ -221,17 +222,17 @@ export const DocumentStudioView: React.FC = () => {
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
           {/* Left Pane: Document Text Content */}
           <div
-            className="lg:col-span-7 p-6 overflow-y-auto bg-[#0A0D18] border-r border-slate-800 select-text leading-relaxed text-sm text-slate-200 space-y-4"
+            className="space-y-4 overflow-y-auto border-r border-[var(--app-border)] bg-[var(--app-surface-muted)] p-5 text-sm leading-relaxed text-[var(--app-text)] select-text lg:col-span-7"
             onMouseUp={handleTextSelection}
           >
-            <div className="p-3 rounded-2xl bg-purple-950/30 border border-purple-500/30 text-xs text-purple-300 flex items-center justify-between">
+            <div className="surface-card flex items-center justify-between border-cyan-200 bg-cyan-50 p-3 text-xs text-cyan-800 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200">
               <div className="flex items-center gap-2">
                 <Sparkles size={14} />
-                <span>Tip: Highlight any sentence to explain, generate flashcards, or create instant quiz questions!</span>
+                <span>Highlight text to explain, turn it into a flashcard, or generate quiz questions.</span>
               </div>
             </div>
 
-            <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 font-mono text-xs whitespace-pre-wrap leading-relaxed">
+            <div className="surface-card p-5 font-mono text-xs leading-relaxed whitespace-pre-wrap">
               {selectedDocForReader.rawContent || `CHAPTER 1: ${selectedDocForReader.title}
 
 1.1 Fundamental Theory & Mathematical Model
@@ -252,74 +253,74 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
           </div>
 
           {/* Right Pane: AI PDF Copilot */}
-          <div className="lg:col-span-5 p-5 overflow-y-auto bg-slate-950/60 flex flex-col justify-between space-y-4">
+          <div className="flex flex-col justify-between space-y-4 overflow-y-auto bg-[var(--app-surface)] p-5 lg:col-span-5">
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                <div className="flex items-center gap-2 text-purple-400 font-bold text-xs font-heading">
+              <div className="flex items-center justify-between border-b border-[var(--app-border)] pb-2">
+                <div className="flex items-center gap-2 font-heading text-xs font-black text-teal-700 dark:text-teal-300">
                   <Sparkles size={16} />
                   <span>Document AI Copilot</span>
                 </div>
                 {selectedText && (
-                  <span className="text-[10px] text-slate-400 font-mono">
+                  <span className="font-mono text-[10px] text-[var(--app-text-subtle)]">
                     Snippet Selected ({selectedText.length} chars)
                   </span>
                 )}
               </div>
 
               {selectedText ? (
-                <div className="p-3 rounded-2xl bg-slate-900 border border-purple-500/30 space-y-2">
-                  <div className="text-[10px] uppercase font-bold text-slate-400">
+                <div className="surface-muted space-y-2 p-3">
+                  <div className="text-[10px] font-black uppercase text-[var(--app-text-subtle)]">
                     Selected Passage:
                   </div>
-                  <p className="text-xs text-purple-200 line-clamp-3 italic">
+                  <p className="line-clamp-3 text-xs italic text-[var(--app-text-muted)]">
                     "{selectedText}"
                   </p>
                   <div className="flex items-center gap-2 pt-1">
                     <button
                       onClick={() => handleAiAction('explain')}
-                      className="px-2.5 py-1 rounded-lg bg-purple-600 text-white text-[11px] font-semibold flex items-center gap-1"
+                      className="primary-action px-2.5 py-1 text-[11px]"
                     >
                       <Sparkles size={12} />
                       <span>Explain</span>
                     </button>
                     <button
                       onClick={() => handleAiAction('flashcard')}
-                      className="px-2.5 py-1 rounded-lg bg-amber-600 text-white text-[11px] font-semibold flex items-center gap-1"
+                      className="primary-action bg-amber-600 px-2.5 py-1 text-[11px] text-white hover:bg-amber-500 dark:bg-amber-500 dark:text-white"
                     >
                       <Layers size={12} />
                       <span>Make Flashcard</span>
                     </button>
                     <button
                       onClick={() => openExplainModal(selectedText, selectedDocForReader.subjectName, selectedDocForReader.title)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-[11px] font-semibold"
+                      className="secondary-action px-2.5 py-1 text-[11px]"
                     >
                       Explain Anywhere →
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-2 text-center">
-                  <BookOpen size={24} className="mx-auto text-purple-400" />
+                <div className="surface-muted space-y-2 p-4 text-center text-xs text-[var(--app-text-muted)]">
+                  <BookOpen size={24} className="mx-auto text-teal-700 dark:text-teal-300" />
                   <p>Highlight any line from the left document, or use the quick actions below to study this document.</p>
                 </div>
               )}
 
               {/* AI Response Output */}
               {isAiProcessing ? (
-                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-purple-400 flex items-center gap-2 animate-pulse">
+                <div className="surface-muted flex animate-pulse items-center gap-2 p-4 text-xs text-teal-700 dark:text-teal-300">
                   <Sparkles size={16} />
                   <span>AI Analyzing document context and generating breakdown...</span>
                 </div>
               ) : aiSidebarReply ? (
-                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-200 leading-relaxed whitespace-pre-wrap">
-                  {aiSidebarReply}
+                <div className="surface-muted p-4 text-xs leading-relaxed">
+                  <MarkdownAnswer content={aiSidebarReply} />
                 </div>
               ) : null}
             </div>
 
             {/* Quick Document Summary Chips */}
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <div className="text-[10px] uppercase font-bold text-slate-400">
+            <div className="surface-muted space-y-2 p-4">
+              <div className="text-[10px] font-black uppercase text-[var(--app-text-subtle)]">
                 Key Topics Indexed in this PDF:
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -327,7 +328,7 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
                   <span
                     key={i}
                     onClick={() => openExplainModal(kc, selectedDocForReader.subjectName, selectedDocForReader.title)}
-                    className="cursor-pointer px-2.5 py-1 rounded-lg bg-purple-950/60 border border-purple-500/20 text-purple-300 text-[11px] hover:border-purple-500 hover:bg-purple-900/40 transition-colors"
+                    className="cursor-pointer rounded-md border border-teal-200 bg-teal-50 px-2.5 py-1 text-[11px] font-bold text-teal-700 transition-colors hover:border-teal-400 dark:border-teal-500/30 dark:bg-teal-500/10 dark:text-teal-300"
                   >
                     {kc}
                   </span>
@@ -342,34 +343,34 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
 
   // 2. Default View: Document List & Upload Form
   return (
-    <div className="space-y-6 pb-16 max-w-6xl mx-auto">
+    <div className="view-stack space-y-5">
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-cyan-950/40 via-purple-950/40 to-slate-900/60 border border-cyan-500/30 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="view-hero flex flex-col items-start justify-between gap-4 p-5 sm:p-6 md:flex-row md:items-center">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
               <FileText size={22} />
             </div>
-            <h1 className="text-2xl font-extrabold font-heading text-white tracking-tight">
+            <h1 className="view-title text-2xl">
               PDF & Notes Learning Studio
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300">
+          <p className="view-copy text-xs sm:text-sm">
             Upload course PDFs, lecture slides, and past papers. Crack Skull AI automatically indexes chapters, creates concept summaries, and generates practice questions.
           </p>
         </div>
       </div>
 
       {/* Upload Box */}
-      <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold font-heading text-white flex items-center gap-2">
-          <Upload size={16} className="text-cyan-400" />
+      <div className="surface-card space-y-4 p-5 sm:p-6">
+        <h3 className="flex items-center gap-2 font-heading text-sm font-black text-[var(--app-text)]">
+          <Upload size={16} className="text-cyan-700 dark:text-cyan-300" />
           <span>Upload New Academic Document / Past Paper</span>
         </h3>
 
         <form onSubmit={handleUpload} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
           <div className="sm:col-span-4">
-            <label className="flex items-center justify-center w-full h-full min-h-[42px] cursor-pointer rounded-xl border border-dashed border-cyan-700/60 bg-slate-950 px-3 py-2 text-xs text-cyan-200 hover:border-cyan-400">
+            <label className="form-control flex h-full min-h-[42px] w-full cursor-pointer items-center justify-center border-dashed px-3 py-2 text-xs font-bold text-cyan-700 hover:border-cyan-400 dark:text-cyan-300">
               <input
                 type="file"
                 accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
@@ -390,7 +391,7 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
               placeholder="Document Title (e.g. Unit 3 - Transactions & Locking Notes.pdf)"
               value={uploadedTitle}
               onChange={e => setUploadedTitle(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+              className="form-control w-full px-3.5 py-2.5 text-xs"
             />
           </div>
 
@@ -400,7 +401,7 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
               placeholder="Subject (e.g. Database Management Systems)"
               value={uploadedSubject}
               onChange={e => setUploadedSubject(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+              className="form-control w-full px-3.5 py-2.5 text-xs"
             />
           </div>
 
@@ -408,14 +409,14 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
             <button
               type="submit"
               disabled={isUploading || !selectedFile}
-              className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs shadow-md shadow-cyan-600/30 flex items-center justify-center gap-1.5 disabled:opacity-50 transition-all"
+              className="primary-action w-full py-2.5 text-xs disabled:opacity-50"
             >
               <Upload size={14} />
               <span>{isUploading ? 'Indexing...' : 'Upload PDF'}</span>
             </button>
           </div>
           {uploadError && (
-            <div className="sm:col-span-12 rounded-xl border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-200">
+            <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200 sm:col-span-12">
               {uploadError}
             </div>
           )}
@@ -426,35 +427,35 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Tab Filter */}
-          <div className="flex flex-wrap items-center gap-1.5 overflow-x-hidden">
+          <div className="segmented-control overflow-x-auto">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-                activeTab === 'all' ? 'bg-purple-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
+              className={`segmented-option ${
+                activeTab === 'all' ? 'segmented-option-active' : ''
               }`}
             >
               All Documents ({documents.length})
             </button>
             <button
               onClick={() => setActiveTab('notes')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-                activeTab === 'notes' ? 'bg-purple-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
+              className={`segmented-option ${
+                activeTab === 'notes' ? 'segmented-option-active' : ''
               }`}
             >
               Lecture Notes
             </button>
             <button
               onClick={() => setActiveTab('books')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-                activeTab === 'books' ? 'bg-purple-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
+              className={`segmented-option ${
+                activeTab === 'books' ? 'segmented-option-active' : ''
               }`}
             >
               Reference Books
             </button>
             <button
               onClick={() => setActiveTab('pyq')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-                activeTab === 'pyq' ? 'bg-purple-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
+              className={`segmented-option ${
+                activeTab === 'pyq' ? 'segmented-option-active' : ''
               }`}
             >
               Past Papers
@@ -463,13 +464,13 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
 
           {/* Search Box */}
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+            <Search size={14} className="absolute left-3 top-2.5 text-[var(--app-text-subtle)]" />
             <input
               type="text"
               placeholder="Search uploaded files..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+              className="form-control pl-8 pr-3 py-1.5 text-xs"
             />
           </div>
         </div>
@@ -479,49 +480,49 @@ A relation schema R is in BCNF with respect to functional dependency set F if, f
           {filteredDocs.map(doc => (
             <div
               key={doc.id}
-              className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/40 transition-all flex flex-col justify-between space-y-3 group"
+              className="surface-card group flex flex-col justify-between space-y-3 p-5 transition-colors hover:border-[var(--app-border-strong)]"
             >
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="p-2.5 rounded-2xl bg-cyan-500/10 text-cyan-400 group-hover:scale-105 transition-transform">
+                  <div className="rounded-lg bg-cyan-50 p-2.5 text-cyan-700 transition-transform group-hover:scale-105 dark:bg-cyan-500/10 dark:text-cyan-300">
                     <FileText size={20} />
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => toggleBookmarkDocument(doc.id)}
-                      className={`p-1.5 rounded-lg hover:bg-slate-800 ${
-                        doc.isBookmarked ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'
+                      className={`rounded-md p-1.5 hover:bg-[var(--app-surface-muted)] ${
+                        doc.isBookmarked ? 'text-amber-500' : 'text-[var(--app-text-subtle)] hover:text-[var(--app-text)]'
                       }`}
                     >
                       <Bookmark size={15} className={doc.isBookmarked ? 'fill-amber-400' : ''} />
                     </button>
                     <button
                       onClick={() => deleteDocument(doc.id)}
-                      className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-rose-400"
+                      className="rounded-md p-1.5 text-[var(--app-text-subtle)] hover:bg-[var(--app-surface-muted)] hover:text-rose-500"
                     >
                       <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
 
-                <h4 className="text-sm font-bold text-white font-heading line-clamp-1">
+                <h4 className="font-heading line-clamp-1 text-sm font-black text-[var(--app-text)]">
                   {doc.title}
                 </h4>
-                <div className="text-[11px] text-slate-400 font-mono">
+                <div className="font-mono text-[11px] text-[var(--app-text-muted)]">
                   {doc.subjectName} • {doc.pageCount} Pages • {doc.fileSize}
                 </div>
-                <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                <p className="view-copy line-clamp-2 text-xs">
                   {doc.summary}
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                <span className="text-[10px] text-slate-500 font-mono">
+              <div className="flex items-center justify-between border-t border-[var(--app-border)] pt-3">
+                <span className="font-mono text-[10px] text-[var(--app-text-subtle)]">
                   {doc.uploadedAt}
                 </span>
                 <button
                   onClick={() => openDocumentReader(doc)}
-                  className="px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-semibold flex items-center gap-1 transition-colors"
+                  className="secondary-action px-3 py-1.5 text-xs"
                 >
                   <span>Open Studio</span>
                   <ChevronRight size={13} />

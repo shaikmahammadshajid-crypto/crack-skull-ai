@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { aiService } from '../../services/aiService';
+import { MarkdownAnswer } from '../common/MarkdownAnswer';
 import {
   Radar,
   Upload,
@@ -149,19 +150,19 @@ export const ExamRadarView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-16 max-w-6xl mx-auto">
+    <div className="view-stack space-y-5">
       {/* Header Banner */}
-      <div className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#161922] border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors duration-150">
+      <div className="view-hero flex flex-col items-start justify-between gap-4 p-5 sm:p-6 md:flex-row md:items-center">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300">
               <Radar size={22} />
             </div>
-            <h1 className="text-2xl font-bold font-heading text-gray-900 dark:text-white tracking-tight">
+            <h1 className="view-title text-2xl">
               Exam Radar & PYQ Predictor
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-xl">
+          <p className="view-copy max-w-xl text-xs sm:text-sm">
             AI analysis of previous 5 years' question papers to identify high-probability questions, weightage hotspots, and 10-mark recurring derivations.
           </p>
         </div>
@@ -169,7 +170,7 @@ export const ExamRadarView: React.FC = () => {
         <button
           onClick={handleAnalyzeNewPaper}
           disabled={analyzing}
-          className="px-4 py-2.5 rounded-full bg-black text-white dark:bg-white dark:text-black font-semibold text-xs shadow-xs flex items-center gap-2 disabled:opacity-50 transition-all"
+          className="primary-action px-4 py-2.5 text-xs disabled:opacity-50"
         >
           <Sparkles size={15} />
           <span>{analyzing ? 'Scanning Past 5 Years...' : 'Run Deep Radar Scan'}</span>
@@ -177,15 +178,15 @@ export const ExamRadarView: React.FC = () => {
       </div>
 
       {/* Subject Filter Bar */}
-      <div className="flex flex-wrap items-center gap-2 overflow-x-hidden pb-1">
+      <div className="segmented-control overflow-x-auto pb-1">
         {subjects.map(sub => (
           <button
             key={sub.id}
             onClick={() => setSelectedSubjectId(sub.id)}
-            className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-xs ${
+            className={`segmented-option whitespace-nowrap ${
               selectedSubjectId === sub.id
-                ? 'bg-black text-white dark:bg-white dark:text-black font-bold'
-                : 'bg-white dark:bg-[#161922] text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white border border-gray-200 dark:border-gray-800'
+                ? 'segmented-option-active'
+                : ''
             }`}
           >
             {sub.name} ({sub.code})
@@ -196,11 +197,11 @@ export const ExamRadarView: React.FC = () => {
       {/* Prediction Cards Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold font-heading text-gray-900 dark:text-white flex items-center gap-2">
+          <h3 className="flex items-center gap-2 font-heading text-sm font-black text-[var(--app-text)]">
             <Zap size={16} className="text-orange-500" />
             <span>High-Yield Predicted Topics for {selectedSub.name}</span>
           </h3>
-          <span className="text-xs text-gray-400 font-mono">
+          <span className="font-mono text-xs text-[var(--app-text-subtle)]">
             Sorted by Exam Occurrence Probability
           </span>
         </div>
@@ -211,27 +212,27 @@ export const ExamRadarView: React.FC = () => {
             return (
               <div
                 key={idx}
-                className="p-5 rounded-2xl bg-white dark:bg-[#161922] border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-all space-y-4 shadow-xs"
+                className="surface-card space-y-4 p-5 transition-colors hover:border-[var(--app-border-strong)]"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-base font-bold text-gray-900 dark:text-white">
+                      <span className="text-base font-black text-[var(--app-text)]">
                         {item.topic}
                       </span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                      <span className="rounded-full bg-orange-50 px-2.5 py-0.5 font-mono text-[10px] font-black text-orange-700 dark:bg-orange-500/10 dark:text-orange-300">
                         {item.probability}% Probability
                       </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-mono">
+                      <span className="status-pill font-mono">
                         {item.frequency}
                       </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-mono">
+                      <span className="status-pill font-mono">
                         ~{item.avgMarks} Marks
                       </span>
                     </div>
 
-                    <div className="text-xs text-gray-400">
-                      Question Type: <strong className="text-gray-700 dark:text-gray-200">{item.questionType}</strong>
+                    <div className="text-xs text-[var(--app-text-muted)]">
+                      Question Type: <strong className="text-[var(--app-text)]">{item.questionType}</strong>
                     </div>
                   </div>
 
@@ -239,7 +240,7 @@ export const ExamRadarView: React.FC = () => {
                     <button
                       onClick={() => handleSolveWithAI(item)}
                       disabled={solvingTopic === item.topic}
-                      className="px-3.5 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black text-gray-700 dark:text-gray-300 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
+                      className="secondary-action px-3.5 py-1.5 text-xs"
                     >
                       <Sparkles size={13} />
                       <span>{solvingTopic === item.topic ? 'Generating...' : 'Solve Model Answer'}</span>
@@ -247,7 +248,7 @@ export const ExamRadarView: React.FC = () => {
 
                     <button
                       onClick={() => handlePracticeQuiz(item)}
-                      className="px-3.5 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
+                      className="primary-action px-3.5 py-1.5 text-xs"
                     >
                       <HelpCircle size={13} />
                       <span>Quiz</span>
@@ -256,21 +257,19 @@ export const ExamRadarView: React.FC = () => {
                 </div>
 
                 {/* Sample recurring question */}
-                <div className="p-3.5 rounded-xl bg-gray-50 dark:bg-[#1A1D27] border border-gray-100 dark:border-gray-800 text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                  <span className="font-bold text-gray-900 dark:text-white font-mono">Exam Prompt: </span>
+                <div className="surface-muted p-3.5 text-xs leading-relaxed text-[var(--app-text-muted)]">
+                  <span className="font-mono font-black text-[var(--app-text)]">Exam Prompt: </span>
                   "{item.sampleQuestion}"
                 </div>
 
                 {/* Solved Model Answer Dropdown (if generated) */}
                 {hasSolution && (
-                  <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 text-xs text-gray-700 dark:text-gray-200 space-y-2 leading-relaxed animate-in fade-in">
-                    <div className="font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                  <div className="surface-muted animate-in fade-in space-y-2 border-blue-200 bg-blue-50 p-4 text-xs leading-relaxed dark:border-blue-500/30 dark:bg-blue-500/10">
+                    <div className="flex items-center gap-1.5 font-black text-blue-700 dark:text-blue-300">
                       <Sparkles size={14} />
                       <span>10-Mark Model Answer & Key Points:</span>
                     </div>
-                    <div className="whitespace-pre-wrap font-sans text-gray-600 dark:text-gray-300">
-                      {solvedSolutions[item.topic]}
-                    </div>
+                    <MarkdownAnswer content={solvedSolutions[item.topic]} />
                   </div>
                 )}
               </div>

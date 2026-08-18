@@ -9,6 +9,7 @@ import { AIExplainModal } from './components/common/AIExplainModal';
 import { SettingsModal } from './components/common/SettingsModal';
 import { AdminDashboardModal } from './components/admin/AdminDashboardModal';
 import { LoginView } from './components/auth/LoginView';
+import { navigationGroups, navigationItems } from './components/common/navigationConfig';
 
 import { CommandDashboard } from './components/dashboard/CommandDashboard';
 import { AITutorView } from './components/ai/AITutorView';
@@ -29,6 +30,7 @@ import { StudentProfileView } from './components/profile/StudentProfileView';
 const MainLayout: React.FC = () => {
   const { activeTab, setActiveTab, isAuthenticated } = useApp();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   if (!isAuthenticated) {
     return <LoginView />;
@@ -72,74 +74,73 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen max-w-[100vw] overflow-x-hidden bg-[#F8F9FA] dark:bg-[#0F1117] text-[#1A1A1A] dark:text-gray-100 font-sans selection:bg-gray-900 selection:text-white transition-colors duration-150">
+    <div className="app-shell flex min-h-screen max-w-[100vw] overflow-x-hidden font-sans selection:bg-gray-950 selection:text-white transition-colors duration-150">
       {/* Desktop Sidebar */}
-      <Sidebar />
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
+      />
 
       {/* Mobile Drawer Backdrop */}
       {mobileDrawerOpen && (
         <div
           onClick={() => setMobileDrawerOpen(false)}
-          className="fixed inset-0 z-40 bg-black/40 dark:bg-black/70 backdrop-blur-xs lg:hidden animate-in fade-in"
+          className="fixed inset-0 z-40 bg-gray-950/45 backdrop-blur-sm lg:hidden animate-in fade-in"
+          aria-label="Close navigation menu"
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="w-[min(18rem,88vw)] h-full bg-white dark:bg-[#161922] border-r border-gray-200 dark:border-gray-800 p-5 flex flex-col justify-between shadow-2xl"
+            className="app-sidebar flex h-full w-[min(21rem,88vw)] flex-col shadow-2xl"
           >
-            <div className="space-y-5">
-              <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-800">
-                <div className="w-9 h-9 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center font-bold text-lg">
+            <div className="flex items-center gap-3 border-b border-[var(--app-border)] p-4">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-gray-950 text-sm font-black text-white dark:bg-white dark:text-gray-950">
                   CS
                 </div>
-                <div>
-                  <span className="font-bold text-sm text-gray-900 dark:text-white font-heading">
+                <div className="min-w-0">
+                  <span className="font-heading text-sm font-black text-[var(--app-text)]">
                     CrackSkull AI
                   </span>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400">Exam Preparation Copilot</p>
+                  <p className="truncate text-[11px] font-medium text-[var(--app-text-muted)]">Exam preparation cockpit</p>
                 </div>
               </div>
 
-              <div className="space-y-1 overflow-y-auto max-h-[70vh] pr-1">
-                {[
-                  { id: 'dashboard', label: 'Home Assistant' },
-                  { id: 'ai-tutor', label: 'Multilingual AI Agents' },
-                  { id: 'math-solver', label: 'Math Solver' },
-                  { id: 'study-plan', label: 'Adaptive Study Plan' },
-                  { id: 'exam-radar', label: 'Exam Radar (PYQ)' },
-                  { id: 'document-ai', label: 'PDF Learning Studio' },
-                  { id: 'quiz', label: 'AI Mock Quiz' },
-                  { id: 'viva', label: 'AI Viva Simulator' },
-                  { id: 'flashcards', label: 'Spaced Flashcards' },
-                  { id: 'focus-timer', label: 'Focus Timer' },
-                  { id: 'knowledge-map', label: 'Knowledge Map' },
-                  { id: 'library', label: 'Digital Library' },
-                  { id: 'analytics', label: 'Academic Analytics' },
-                  { id: 'calendar', label: 'Exam Calendar' },
-                  { id: 'profile', label: 'Student Profile' },
-                ].map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id as any);
-                      setMobileDrawerOpen(false);
-                    }}
-                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
-                      activeTab === item.id
-                        ? 'bg-black text-white dark:bg-white dark:text-black shadow-sm'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/70'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-4">
+              {navigationGroups.map(group => (
+                <div key={group} className="space-y-1">
+                  <div className="px-3 text-[10px] font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
+                    {group}
+                  </div>
+                  {navigationItems.filter(item => item.group === group).map(item => (
+                    <button
+                      key={`${group}_${item.label}`}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setMobileDrawerOpen(false);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs transition-colors ${
+                        activeTab === item.id
+                          ? 'bg-gray-950 font-black text-white shadow-sm dark:bg-white dark:text-gray-950'
+                          : 'font-bold text-[var(--app-text-muted)] hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-text)]'
+                      }`}
+                    >
+                      <span className="shrink-0">{item.icon}</span>
+                      <span className="min-w-0 text-left">
+                        <span className="block truncate">{item.label}</span>
+                        <span className={`block truncate text-[10px] ${activeTab === item.id ? 'text-white/70 dark:text-gray-950/60' : 'text-[var(--app-text-subtle)]'}`}>
+                          {item.subtitle}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ))}
             </div>
 
             <button
               onClick={() => setMobileDrawerOpen(false)}
-              className="w-full py-2.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="secondary-action m-3 py-2.5 text-xs"
             >
-              Close Menu
+              Close menu
             </button>
           </div>
         </div>
@@ -149,7 +150,7 @@ const MainLayout: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden">
         <Header onOpenMobileMenu={() => setMobileDrawerOpen(true)} />
 
-        <main className="flex-1 w-full max-w-full p-3 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden bg-[#F8F9FA] dark:bg-[#0F1117]">
+        <main className="app-main flex-1 w-full max-w-full overflow-y-auto overflow-x-hidden p-3 sm:p-5 lg:p-6">
           {renderActiveView()}
         </main>
 

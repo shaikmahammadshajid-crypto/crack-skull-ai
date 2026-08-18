@@ -149,8 +149,9 @@ const languageNames: Record<string, string> = {
 // AI Chatbot endpoint with multilingual responses and specialized academic agents.
 app.post('/api/ai/chat', async (req, res) => {
   try {
-    const { message, mode, subject, academicContext, history, language = 'auto', attachments = [] } = req.body;
+    const { message, mode, subject, academicContext, history, language = 'auto', attachments = [], allowFallback = true } = req.body;
     const ai = getGeminiClient();
+    const shouldAllowFallback = allowFallback !== false;
     const responseLanguage = languageNames[language] || languageNames.auto;
     const multilingualRule = `Always answer in ${responseLanguage}. Preserve technical terms in English when they are standard exam or programming vocabulary, and add simple local-language explanations beside them when useful.`;
     const normalizedAttachments = Array.isArray(attachments) ? attachments.slice(0, 5) : [];
@@ -178,15 +179,42 @@ app.post('/api/ai/chat', async (req, res) => {
 Explain concepts step-by-step with intuitive analogies, structured points, visual ASCII or Markdown tables, and concrete examples. Focus on building deep conceptual understanding. Subject context: ${subject || 'General Engineering/Science'}.
 ${universityAnswerContract}
 ${multilingualRule}`,
-      math: `You are Crack Skull AI Math Solver.
-Solve every typical academic math problem the student gives: algebra, trigonometry, calculus, differential equations, matrices, vectors, probability, statistics, discrete math, numerical methods, physics-style formulas, and word problems.
+      math: `You are Crack Skull AI Advanced Engineering Mathematics Solver.
+Solve the student's exact question for university and competitive engineering exams. Scope includes algebra, calculus, differential equations, transforms, matrices, vectors, probability, statistics, numerical methods, complex variables, electrical engineering mathematics, mechanical systems, civil engineering calculations, control systems, and signals & systems.
+
+Selected controls:
+- Topic / Branch: ${academicContext?.mathBranch || subject || 'Engineering Mathematics'}
+- Difficulty: ${academicContext?.mathDifficulty || 'University'}
+- Answer style: ${academicContext?.answerStyle || 'Exam Steps'}
+
+Mandatory response structure, using these exact Markdown H1 headings:
+# Problem Restatement
+# Given
+# Required
+# Assumptions and Units
+# Formula / Theorem Used
+# Step-by-Step Solution
+# Verification
+# Final Answer
+# Exam Tip
+
 Rules:
-- Start with "Given" and "Required".
-- Write formulas/theorems before substitution.
-- Show every transformation step without skipping algebra.
-- For uploaded question photos, transcribe the problem first, then solve it.
-- Check domains, signs, units, and reasonableness.
-- Box the final answer and add a quick exam-tip.
+- Solve the actual question, never return a generic answer template.
+- Use properly formatted LaTeX for all equations.
+- Use inline math delimiters \\( ... \\) and block math delimiters \\[ ... \\] or $$ ... $$.
+- Do not put equations in code fences.
+- Define each symbol before using it.
+- Show clear, university-level derivation steps.
+- Maintain SI units for engineering calculations.
+- Check signs, dimensions/units, domains, initial conditions, boundary conditions, and physical reasonableness.
+- Classify damping, stability, convergence, or other relevant engineering behavior when appropriate.
+- For numerical methods, show iterations, tolerance, and convergence condition.
+- For matrix problems, verify results when practical.
+- Do not claim a result is verified unless the verification calculation is shown.
+- For incomplete questions, state a reasonable assumption or solve symbolically; never invent values.
+- Make the final result visually prominent with \\[\\boxed{...}\\].
+- For uploaded question photos, transcribe the visible problem first, then solve it. If the image is unreadable, say that clearly.
+- Respect the selected language and answer-style controls.
 Subject context: ${subject || 'Mathematics / Quantitative Problem Solving'}.
 ${universityAnswerContract}
 ${multilingualRule}`,
@@ -274,6 +302,16 @@ Provide a comprehensive, ChatGPT-style Markdown response with clear headers, sho
     const geminiContents = geminiParts ? [{ role: 'user', parts: geminiParts }] : prompt;
 
     const shouldPreferGeminiForVision = imageAttachments.length > 0 && ai;
+    const isImageOnlyMathPrompt = mode === 'math' && imageAttachments.length > 0 && /^Solve the uploaded handwritten or printed math problem/i.test(String(message || ''));
+
+    if (isImageOnlyMathPrompt && !ai && !shouldAllowFallback) {
+      return res.status(503).json({
+        error: 'Image solving needs a live vision-capable AI provider. Configure GEMINI_API_KEY or type the problem text.',
+        mode,
+        isFallback: false,
+        provider: 'vision-unavailable',
+      });
+    }
 
     if (shouldPreferGeminiForVision) {
       const response = await ai.models.generateContent({
@@ -301,6 +339,15 @@ Provide a comprehensive, ChatGPT-style Markdown response with clear headers, sho
     }
 
     if (!ai) {
+      if (!shouldAllowFallback) {
+        return res.status(503).json({
+          error: 'Live AI provider is unavailable. Configure GEMINI_API_KEY, NVIDIA_API_KEY, NVIDIA_INFERENCE_API_KEY, or Vibe_Coder to solve this problem.',
+          mode,
+          isFallback: false,
+          provider: 'unavailable',
+        });
+      }
+
       return res.json({
         reply: generateOfflineAiReply(message, mode, subject, responseLanguage),
         mode,
@@ -322,6 +369,14 @@ Provide a comprehensive, ChatGPT-style Markdown response with clear headers, sho
     res.json({ reply: enhanceAcademicReply(reply, message, subject, mode), mode, isFallback: false, provider: 'gemini' });
   } catch (error: any) {
     console.error('Chat API Error:', error);
+    if (req.body?.allowFallback === false) {
+      return res.status(500).json({
+        error: error.message || 'Live AI provider failed while solving this problem.',
+        mode: req.body?.mode || 'tutor',
+        isFallback: false,
+      });
+    }
+
     res.status(500).json({
       error: error.message || 'Internal AI Error',
       reply: generateOfflineAiReply(req.body.message || '', req.body.mode || 'tutor', req.body.subject, languageNames[req.body.language] || languageNames.auto),

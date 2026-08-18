@@ -1,56 +1,45 @@
 import React from 'react';
 import { useApp, NavigationTab } from '../../context/AppContext';
-import {
-  LayoutDashboard,
-  Bot,
-  Calculator,
-  CalendarCheck,
-  BookOpen,
-  Mic,
-} from 'lucide-react';
+import { Mic } from 'lucide-react';
+import { navigationItems } from './navigationConfig';
+
+const mobileTabs: NavigationTab[] = ['dashboard', 'ai-tutor', 'math-solver', 'study-plan', 'library'];
 
 export const MobileBottomNav: React.FC = () => {
   const { activeTab, setActiveTab, setVoiceAssistantOpen } = useApp();
-
-  const navItems = [
-    { id: 'dashboard' as NavigationTab, label: 'Home', icon: <LayoutDashboard size={20} /> },
-    { id: 'ai-tutor' as NavigationTab, label: 'AI', icon: <Bot size={20} /> },
-    { id: 'math-solver' as NavigationTab, label: 'Math', icon: <Calculator size={20} /> },
-    { id: 'study-plan' as NavigationTab, label: 'Study', icon: <CalendarCheck size={20} /> },
-    { id: 'library' as NavigationTab, label: 'Library', icon: <BookOpen size={20} /> },
-  ];
+  const navItems = navigationItems.filter(item => mobileTabs.includes(item.id));
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#161922]/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 px-1.5 py-1.5 pb-safe transition-colors duration-150 max-w-full overflow-hidden">
-      <div className="grid grid-cols-6 items-center gap-1 max-w-lg mx-auto">
-        {navItems.map((item) => {
+    <nav className="app-header fixed bottom-0 left-0 right-0 z-40 max-w-full overflow-hidden border-t border-[var(--app-border)] px-1.5 py-1.5 pb-safe lg:hidden">
+      <div className="mx-auto grid max-w-lg grid-cols-6 items-center gap-1">
+        {navItems.map(item => {
           const isActive = activeTab === item.id;
+
           return (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`min-w-0 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-colors ${
+              className={`flex min-w-0 flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors ${
                 isActive
-                  ? 'text-black dark:text-white font-bold'
-                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                  ? 'text-gray-950 dark:text-white'
+                  : 'text-[var(--app-text-subtle)] hover:text-[var(--app-text)]'
               }`}
+              title={item.label}
             >
-              <div className="relative">
+              <div className={`grid h-7 w-7 place-items-center rounded-lg ${isActive ? 'bg-gray-950 text-white dark:bg-white dark:text-gray-950' : ''}`}>
                 {item.icon}
-                {isActive && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black dark:bg-white rounded-full" />
-                )}
               </div>
-              <span className="max-w-full truncate text-[9px] min-[380px]:text-[10px] mt-0.5 tracking-tight font-medium">{item.label}</span>
+              <span className="mt-0.5 max-w-full truncate text-[9px] font-bold tracking-tight min-[380px]:text-[10px]">
+                {item.shortLabel}
+              </span>
             </button>
           );
         })}
 
-        {/* Floating Voice AI trigger button */}
         <button
           onClick={() => setVoiceAssistantOpen(true)}
-          className="mx-auto flex items-center justify-center w-9 h-9 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-sm active:scale-95 transition-transform"
-          title="Voice AI"
+          className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-gray-950 text-white shadow-sm active:scale-95 dark:bg-white dark:text-gray-950"
+          title="Voice assistant"
         >
           <Mic size={16} />
         </button>

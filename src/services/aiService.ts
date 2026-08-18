@@ -26,9 +26,11 @@ export const aiService = {
     history?: { role: string; content: string }[];
     language?: string;
     attachments?: ChatAttachmentPayload[];
+    allowFallback?: boolean;
   }): Promise<ChatResponsePayload> {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 45000);
+    const allowFallback = params.allowFallback !== false;
 
     try {
       const response = await fetch('/api/ai/chat', {
@@ -38,14 +40,20 @@ export const aiService = {
         signal: controller.signal,
       });
       const data = await response.json().catch(() => null);
-      if (data?.reply) {
-        return data;
-      }
       if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
+        throw new Error(data?.error || `Server returned ${response.status}`);
+      }
+      if (data?.reply) {
+        if (data.isFallback && !allowFallback) {
+          throw new Error('Live AI provider is unavailable.');
+        }
+        return data;
       }
       throw new Error('Server returned an empty AI response');
     } catch (error) {
+      if (!allowFallback) {
+        throw error;
+      }
       console.warn('AI Service falling back to offline generator:', error);
       return {
         reply: buildClientFallbackReply(params.message, params.mode, params.subject),

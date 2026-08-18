@@ -75,19 +75,19 @@ export const DigitalLibraryView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-16 max-w-6xl mx-auto">
+    <div className="view-stack space-y-5">
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-teal-950/40 via-purple-950/40 to-slate-900/60 border border-teal-500/30 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="view-hero flex flex-col items-start justify-between gap-4 p-5 sm:p-6 md:flex-row md:items-center">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-teal-500/20 text-teal-400">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300">
               <BookOpen size={22} />
             </div>
-            <h1 className="text-2xl font-extrabold font-heading text-white tracking-tight">
+            <h1 className="view-title text-2xl">
               Open Academic Digital Library
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-300">
+          <p className="view-copy text-xs sm:text-sm">
             Search {libraryResources.length} in-app academic resources across {departmentCount} subjects plus Open Library's global book catalog for textbooks, topics, authors, and doubt-solving references.
           </p>
         </div>
@@ -95,35 +95,35 @@ export const DigitalLibraryView: React.FC = () => {
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5 overflow-x-hidden">
+        <div className="segmented-control overflow-x-auto">
           <button
             onClick={() => setActiveCategory('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-              activeCategory === 'all' ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400'
+            className={`segmented-option ${
+              activeCategory === 'all' ? 'segmented-option-active' : ''
             }`}
           >
             In-App Library ({libraryResources.length})
           </button>
           <button
             onClick={() => setActiveCategory('textbook')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-              activeCategory === 'textbook' ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400'
+            className={`segmented-option ${
+              activeCategory === 'textbook' ? 'segmented-option-active' : ''
             }`}
           >
             Textbooks
           </button>
           <button
             onClick={() => setActiveCategory('cheat_sheet')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-              activeCategory === 'cheat_sheet' ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400'
+            className={`segmented-option ${
+              activeCategory === 'cheat_sheet' ? 'segmented-option-active' : ''
             }`}
           >
             Formula Cheat Sheets
           </button>
           <button
             onClick={() => setActiveCategory('pyq_archive')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
-              activeCategory === 'pyq_archive' ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400'
+            className={`segmented-option ${
+              activeCategory === 'pyq_archive' ? 'segmented-option-active' : ''
             }`}
           >
             PYQ Archives
@@ -131,7 +131,7 @@ export const DigitalLibraryView: React.FC = () => {
         </div>
 
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+          <Search size={14} className="absolute left-3 top-2.5 text-[var(--app-text-subtle)]" />
           <input
             type="text"
             placeholder="Search local + online books, topics..."
@@ -140,26 +140,26 @@ export const DigitalLibraryView: React.FC = () => {
             onKeyDown={e => {
               if (e.key === 'Enter') searchOpenLibrary();
             }}
-            className="bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-teal-500"
+            className="form-control pl-8 pr-3 py-1.5 text-xs"
           />
         </div>
       </div>
 
-      <div className="rounded-3xl bg-white dark:bg-slate-900/80 border border-gray-200 dark:border-slate-800 p-4 space-y-3">
+      <div className="surface-card space-y-3 p-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2 text-sm font-black text-gray-950 dark:text-white">
+            <div className="flex items-center gap-2 text-sm font-black text-[var(--app-text)]">
               <Globe2 size={17} className="text-teal-500" />
               Global Open Library Search
             </div>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+            <p className="mt-1 text-xs text-[var(--app-text-muted)]">
               Search millions of public book records and use AI to convert book topics into study explanations.
             </p>
           </div>
           <button
             onClick={() => searchOpenLibrary()}
             disabled={isSearchingOnline || !searchQuery.trim()}
-            className="px-4 py-2 rounded-xl bg-teal-600 text-white text-xs font-black hover:bg-teal-500 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="primary-action bg-teal-600 px-4 py-2 text-xs text-white hover:bg-teal-500 disabled:opacity-50 dark:bg-teal-500 dark:text-white"
           >
             {isSearchingOnline ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
             <span>Search Online</span>
@@ -173,7 +173,7 @@ export const DigitalLibraryView: React.FC = () => {
                 setSearchQuery(topic);
                 searchOpenLibrary(topic);
               }}
-              className="px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 text-[11px] font-semibold text-gray-700 dark:text-slate-300 hover:border-teal-400"
+              className="secondary-action rounded-full px-2.5 py-1 text-[11px] hover:border-teal-400"
             >
               {topic}
             </button>
@@ -189,10 +189,10 @@ export const DigitalLibraryView: React.FC = () => {
       {onlineBooks.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-gray-950 dark:text-white">Online Book Results ({onlineBooks.length})</h3>
+            <h3 className="text-sm font-black text-[var(--app-text)]">Online Book Results ({onlineBooks.length})</h3>
             <button
               onClick={() => setOnlineBooks([])}
-              className="text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"
+              className="text-xs font-semibold text-[var(--app-text-muted)] hover:text-[var(--app-text)]"
             >
               Clear results
             </button>
@@ -202,7 +202,7 @@ export const DigitalLibraryView: React.FC = () => {
               const subjects = (book.subject || []).slice(0, 4);
               const openUrl = `https://openlibrary.org${book.key}`;
               return (
-                <div key={book.key} className="p-5 rounded-3xl bg-white dark:bg-slate-900/80 border border-gray-200 dark:border-slate-800 hover:border-teal-500/50 transition-all space-y-4">
+                <div key={book.key} className="surface-card space-y-4 p-5 transition-colors hover:border-teal-500/50">
                   <div className="flex items-start gap-3">
                     {book.cover_i ? (
                       <img
@@ -216,8 +216,8 @@ export const DigitalLibraryView: React.FC = () => {
                       </div>
                     )}
                     <div className="min-w-0">
-                      <h4 className="text-sm font-black text-gray-950 dark:text-white line-clamp-2">{book.title}</h4>
-                      <p className="mt-1 text-[11px] text-gray-500 dark:text-slate-400">
+                      <h4 className="line-clamp-2 text-sm font-black text-[var(--app-text)]">{book.title}</h4>
+                      <p className="mt-1 text-[11px] text-[var(--app-text-muted)]">
                         {(book.author_name || ['Unknown author']).slice(0, 2).join(', ')}
                         {book.first_publish_year ? ` • ${book.first_publish_year}` : ''}
                       </p>
@@ -226,16 +226,16 @@ export const DigitalLibraryView: React.FC = () => {
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {subjects.length ? subjects.map(subject => (
-                      <span key={subject} className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-950 text-[10px] text-gray-600 dark:text-slate-400">
+                      <span key={subject} className="status-pill">
                         {subject}
                       </span>
                     )) : (
-                      <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-950 text-[10px] text-gray-600 dark:text-slate-400">
+                      <span className="status-pill">
                         General reference
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between border-t border-[var(--app-border)] pt-2">
                     <a
                       href={openUrl}
                       target="_blank"
@@ -246,7 +246,7 @@ export const DigitalLibraryView: React.FC = () => {
                     </a>
                     <button
                       onClick={() => openExplainModal(`Book: ${book.title}\nAuthor: ${(book.author_name || ['Unknown']).join(', ')}\nSubjects: ${subjects.join(', ') || 'General'}\nExplain how this book can help solve doubts for ${searchQuery || 'this topic'}.`, searchQuery || 'Digital Library')}
-                      className="px-3 py-1.5 rounded-xl bg-teal-600/15 text-teal-700 dark:text-teal-300 hover:bg-teal-600 hover:text-white text-xs font-black"
+                      className="secondary-action px-3 py-1.5 text-xs"
                     >
                       Ask AI
                     </button>
@@ -263,38 +263,38 @@ export const DigitalLibraryView: React.FC = () => {
         {filteredResources.map(res => (
           <div
             key={res.id}
-            className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/40 transition-all flex flex-col justify-between space-y-4"
+            className="surface-card flex flex-col justify-between space-y-4 p-5 transition-colors hover:border-teal-500/40"
           >
             <div className="space-y-2">
               <div className="flex items-start justify-between">
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-800/40">
+                <span className="status-pill font-mono">
                   {res.category.replace('_', ' ').toUpperCase()}
                 </span>
                 <button
                   onClick={() => toggleBookmarkResource(res.id)}
-                  className={`p-1.5 rounded-lg hover:bg-slate-800 ${
-                    res.isBookmarked ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'
+                  className={`rounded-md p-1.5 hover:bg-[var(--app-surface-muted)] ${
+                    res.isBookmarked ? 'text-amber-500' : 'text-[var(--app-text-subtle)] hover:text-[var(--app-text)]'
                   }`}
                 >
                   <Bookmark size={15} className={res.isBookmarked ? 'fill-amber-400' : ''} />
                 </button>
               </div>
 
-              <h4 className="text-sm font-bold text-white font-heading">
+              <h4 className="font-heading text-sm font-black text-[var(--app-text)]">
                 {res.title}
               </h4>
-              <div className="text-[11px] text-slate-400 font-mono">
+              <div className="font-mono text-[11px] text-[var(--app-text-muted)]">
                 {res.author} • {res.license}
               </div>
-              <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+              <p className="view-copy line-clamp-2 text-xs">
                 {res.description}
               </p>
             </div>
 
-            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+            <div className="flex items-center justify-between border-t border-[var(--app-border)] pt-2">
               <div className="flex items-center gap-1">
                 {res.tags.slice(0, 2).map((t, i) => (
-                  <span key={i} className="text-[10px] px-1.5 py-0.2 rounded bg-slate-950 text-slate-400 font-mono">
+                  <span key={i} className="status-pill px-1.5 py-0.5 font-mono text-[10px]">
                     #{t}
                   </span>
                 ))}
@@ -302,7 +302,7 @@ export const DigitalLibraryView: React.FC = () => {
 
               <button
                 onClick={() => openExplainModal(`${res.title}\n${res.description}\nTags: ${res.tags.join(', ')}`, res.subject)}
-                className="px-3 py-1.5 rounded-xl bg-teal-600/20 hover:bg-teal-600 text-teal-300 hover:text-slate-950 text-xs font-bold flex items-center gap-1 transition-colors"
+                className="secondary-action px-3 py-1.5 text-xs"
               >
                 <span>Read & AI Query</span>
                 <ExternalLink size={12} />

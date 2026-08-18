@@ -52,74 +52,74 @@ export const AcademicAnalyticsView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 pb-16 max-w-6xl mx-auto">
+    <div className="view-stack space-y-5">
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-950/50 via-indigo-950/40 to-slate-900/60 border border-purple-500/30 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="view-hero flex flex-col items-start justify-between gap-4 p-5 sm:p-6 md:flex-row md:items-center">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
               <BarChart3 size={22} />
             </div>
-            <h1 className="text-2xl font-extrabold font-heading text-white tracking-tight">
+            <h1 className="view-title text-2xl">
               Academic & Crack Score Analytics
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300">
+          <p className="view-copy text-xs sm:text-sm">
             Real-time telemetry measuring syllabus velocity, quiz accuracy, and predicted examination marks.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 text-center">
-            <div className="text-xl font-extrabold font-mono text-white">
+          <div className="metric-tile text-center">
+            <div className="font-mono text-xl font-black text-[var(--app-text)]">
               {crackScore.overallScore} / 100
             </div>
-            <div className="text-[10px] text-slate-400 uppercase font-semibold">Live Crack Score</div>
+            <div className="text-[10px] font-semibold uppercase text-[var(--app-text-subtle)]">Live Crack Score</div>
           </div>
         </div>
       </div>
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="metric-tile space-y-1">
+          <div className="flex items-center justify-between text-[var(--app-text-muted)]">
             <span className="text-xs">Syllabus Velocity</span>
-            <BookOpen size={16} className="text-purple-400" />
+            <BookOpen size={16} className="text-blue-700 dark:text-blue-300" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+          <div className="font-mono text-2xl font-black text-[var(--app-text)]">
             {crackScore.syllabusCoverage}%
           </div>
           <div className="text-[10px] text-emerald-400">+12% this week</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="metric-tile space-y-1">
+          <div className="flex items-center justify-between text-[var(--app-text-muted)]">
             <span className="text-xs">Quiz Accuracy</span>
             <HelpCircle size={16} className="text-cyan-400" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+          <div className="font-mono text-2xl font-black text-[var(--app-text)]">
             {crackScore.quizAccuracy}%
           </div>
           <div className="text-[10px] text-cyan-400">{quizAttempts.length} Tests Completed</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="metric-tile space-y-1">
+          <div className="flex items-center justify-between text-[var(--app-text-muted)]">
             <span className="text-xs">Study Streak</span>
             <Zap size={16} className="text-amber-400" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+          <div className="font-mono text-2xl font-black text-[var(--app-text)]">
             {user.streakDays} Days
           </div>
-          <div className="text-[10px] text-amber-400">On Fire 🔥</div>
+          <div className="text-[10px] text-amber-500">Active streak</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="metric-tile space-y-1">
+          <div className="flex items-center justify-between text-[var(--app-text-muted)]">
             <span className="text-xs">Scholar Level</span>
             <Award size={16} className="text-pink-400" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+          <div className="font-mono text-2xl font-black text-[var(--app-text)]">
             Level {user.level}
           </div>
           <div className="text-[10px] text-pink-400">{user.xp} Total XP</div>
@@ -129,10 +129,10 @@ export const AcademicAnalyticsView: React.FC = () => {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Crack Score Growth Curve */}
-        <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
+        <div className="surface-card space-y-4 p-5 sm:p-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-white font-bold text-sm font-heading">
-              <TrendingUp size={16} className="text-purple-400" />
+            <div className="flex items-center gap-2 font-heading text-sm font-black text-[var(--app-text)]">
+              <TrendingUp size={16} className="text-blue-700 dark:text-blue-300" />
               <span>Crack Score Progression (7 Days)</span>
             </div>
           </div>
@@ -158,9 +158,9 @@ export const AcademicAnalyticsView: React.FC = () => {
         </div>
 
         {/* Subject Mastery Radar */}
-        <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
+        <div className="surface-card space-y-4 p-5 sm:p-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-white font-bold text-sm font-heading">
+            <div className="flex items-center gap-2 font-heading text-sm font-black text-[var(--app-text)]">
               <Award size={16} className="text-cyan-400" />
               <span>Subject Competency Radar</span>
             </div>

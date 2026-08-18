@@ -182,62 +182,62 @@ export const FocusTimerView: React.FC = () => {
   const selectedSubject = subjects.find(subject => subject.id === selectedSubjectId) || activeSubject || subjects[0];
 
   return (
-    <div className="space-y-6 pb-16 max-w-4xl mx-auto">
+    <div className="view-stack max-w-5xl space-y-5">
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-cyan-950/40 via-purple-950/40 to-slate-900/60 border border-cyan-500/30 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="view-hero flex flex-col items-start justify-between gap-4 p-5 sm:p-6 md:flex-row md:items-center">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
               <Clock size={22} />
             </div>
-            <h1 className="text-2xl font-extrabold font-heading text-white tracking-tight">
+            <h1 className="view-title text-2xl">
               Focus & Pomodoro Flow
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300">
+          <p className="view-copy text-xs sm:text-sm">
             Eliminate distractions with timed deep study blocks, binaural focus beats, and automatic XP logging.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs">
+        <div className="metric-tile flex items-center gap-2 px-3.5 py-2 text-xs">
           <CheckCircle2 size={16} className="text-emerald-400" />
-          <span className="font-mono font-bold text-white">{completedSessions} Sessions Completed Today</span>
+          <span className="font-mono font-black text-[var(--app-text)]">{completedSessions} Sessions Completed Today</span>
         </div>
       </div>
 
       {/* Focus Lock Status */}
-      <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-        focusLocked ? 'bg-cyan-950/30 border-cyan-500/40' : 'bg-slate-900/70 border-slate-800'
+      <div className={`surface-card flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center ${
+        focusLocked ? 'border-cyan-300 bg-cyan-50 dark:border-cyan-500/40 dark:bg-cyan-500/10' : ''
       }`}>
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-300">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
             {focusLocked ? <Lock size={18} /> : <EyeOff size={18} />}
           </div>
           <div>
-            <div className="text-sm font-black text-white">
+            <div className="text-sm font-black text-[var(--app-text)]">
               {focusLocked ? 'Distraction Blocker Active' : 'Strict Focus Room Ready'}
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="mt-0.5 text-xs text-[var(--app-text-muted)]">
               {focusLocked
                 ? 'Pause, reset, mode changes, tab switching, and page leaving are restricted until the timer ends.'
                 : 'Start a study timer to enter fullscreen focus mode with tab-switch detection.'}
             </p>
           </div>
         </div>
-        <div className="text-xs font-mono text-slate-300">
-          Subject: <span className="text-white font-bold">{selectedSubject?.name || 'General Study'}</span>
+        <div className="font-mono text-xs text-[var(--app-text-muted)]">
+          Subject: <span className="font-black text-[var(--app-text)]">{selectedSubject?.name || 'General Study'}</span>
         </div>
       </div>
 
       {/* Main Timer Dial Card */}
-      <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-[#13192B] to-[#0A0D18] border border-cyan-500/30 shadow-2xl text-center flex flex-col items-center space-y-6">
+      <div className="surface-card-strong flex flex-col items-center space-y-6 p-6 text-center sm:p-10">
         {/* Mode Selector Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 p-1 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
+        <div className="segmented-control justify-center text-xs">
           <button
             onClick={() => !focusLocked && setMode('study25')}
             disabled={focusLocked}
-            className={`px-3.5 py-1.5 rounded-xl font-bold transition-all ${
-              mode === 'study25' ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30' : 'text-slate-400 hover:text-white'
+            className={`segmented-option ${
+              mode === 'study25' ? 'segmented-option-active' : ''
             } disabled:opacity-40`}
           >
             25m Pomodoro
@@ -245,8 +245,8 @@ export const FocusTimerView: React.FC = () => {
           <button
             onClick={() => !focusLocked && setMode('deep50')}
             disabled={focusLocked}
-            className={`px-3.5 py-1.5 rounded-xl font-bold transition-all ${
-              mode === 'deep50' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' : 'text-slate-400 hover:text-white'
+            className={`segmented-option ${
+              mode === 'deep50' ? 'segmented-option-active' : ''
             } disabled:opacity-40`}
           >
             50m Deep Flow
@@ -254,8 +254,8 @@ export const FocusTimerView: React.FC = () => {
           <button
             onClick={() => !focusLocked && setMode('shortBreak')}
             disabled={focusLocked}
-            className={`px-3.5 py-1.5 rounded-xl font-bold transition-all ${
-              mode === 'shortBreak' ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30' : 'text-slate-400 hover:text-white'
+            className={`segmented-option ${
+              mode === 'shortBreak' ? 'segmented-option-active' : ''
             } disabled:opacity-40`}
           >
             5m Break
@@ -269,7 +269,7 @@ export const FocusTimerView: React.FC = () => {
               cx="60"
               cy="60"
               r="52"
-              className="stroke-slate-800/80"
+              className="stroke-gray-200 dark:stroke-slate-800"
               strokeWidth="6"
               fill="transparent"
             />
@@ -277,7 +277,7 @@ export const FocusTimerView: React.FC = () => {
               cx="60"
               cy="60"
               r="52"
-              className="stroke-cyan-400 transition-all duration-1000 ease-linear"
+              className="stroke-cyan-500 transition-all duration-1000 ease-linear dark:stroke-cyan-300"
               strokeWidth="6"
               strokeDasharray={2 * Math.PI * 52}
               strokeDashoffset={2 * Math.PI * 52 - (progressPercent / 100) * (2 * Math.PI * 52)}
@@ -287,14 +287,14 @@ export const FocusTimerView: React.FC = () => {
           </svg>
 
           <div className="absolute inset-0 flex flex-col items-center justify-center space-y-1">
-            <span className="text-4xl sm:text-5xl font-extrabold font-mono text-white tracking-tight">
+            <span className="font-mono text-4xl font-black tracking-tight text-[var(--app-text)] sm:text-5xl">
               {formatTime(secondsRemaining)}
             </span>
-            <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-widest font-heading">
+            <span className="font-heading text-[11px] font-black uppercase tracking-widest text-cyan-700 dark:text-cyan-300">
               {isActive ? 'FLOW IN PROGRESS' : 'READY TO FOCUS'}
             </span>
             {focusLocked && (
-              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-cyan-500/15 px-3 py-1 text-[10px] font-bold text-cyan-200">
+              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-cyan-500/15 px-3 py-1 text-[10px] font-black text-cyan-800 dark:text-cyan-200">
                 <ShieldAlert size={12} />
                 LOCKED UNTIL COMPLETE
               </span>
@@ -307,10 +307,10 @@ export const FocusTimerView: React.FC = () => {
           <button
             onClick={toggleTimer}
             disabled={isActive && focusLocked}
-            className={`px-8 py-3.5 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-xl transition-all transform active:scale-95 ${
+            className={`flex items-center gap-2 px-8 py-3.5 text-sm font-black transition-all active:scale-95 ${
               isActive
-                ? 'bg-slate-800 text-slate-400 cursor-not-allowed shadow-none'
-                : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-cyan-500/30'
+                ? 'secondary-action cursor-not-allowed opacity-60'
+                : 'primary-action bg-cyan-600 text-white hover:bg-cyan-500 dark:bg-cyan-500 dark:text-white'
             }`}
           >
             {isActive ? <Lock size={18} /> : <Play size={18} />}
@@ -319,7 +319,7 @@ export const FocusTimerView: React.FC = () => {
 
           <button
             onClick={handleReset}
-            className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-colors"
+            className="icon-button icon-button-lg"
             title={focusLocked ? 'Emergency end focus session' : 'Reset Timer'}
           >
             <RotateCcw size={18} />
@@ -327,8 +327,8 @@ export const FocusTimerView: React.FC = () => {
         </div>
 
         {/* Ambient Synthesizer Sound Selector */}
-        <div className="pt-4 border-t border-slate-800/80 flex items-center gap-2 text-xs text-slate-400">
-          <Volume2 size={14} className="text-cyan-400" />
+        <div className="flex items-center gap-2 border-t border-[var(--app-border)] pt-4 text-xs text-[var(--app-text-muted)]">
+          <Volume2 size={14} className="text-cyan-700 dark:text-cyan-300" />
           <span>Ambient Audio:</span>
           <select
             value={ambientSound}
@@ -340,7 +340,7 @@ export const FocusTimerView: React.FC = () => {
                 else startSynthAudio(val);
               }
             }}
-            className="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1 text-white text-xs focus:outline-none focus:border-cyan-500"
+            className="form-control px-2.5 py-1 text-xs"
           >
             <option value="none">Muted / Silence</option>
             <option value="binaural">Alpha Waves (216 Hz)</option>
@@ -349,13 +349,13 @@ export const FocusTimerView: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl text-left">
-          <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800">
-            <div className="text-[10px] font-bold uppercase text-slate-500">Distractions Detected</div>
-            <div className="text-2xl font-black text-white">{distractionCount}</div>
+          <div className="metric-tile">
+            <div className="text-[10px] font-black uppercase text-[var(--app-text-subtle)]">Distractions Detected</div>
+            <div className="text-2xl font-black text-[var(--app-text)]">{distractionCount}</div>
           </div>
-          <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800">
-            <div className="text-[10px] font-bold uppercase text-slate-500">Last Warning</div>
-            <div className="text-xs font-semibold text-amber-200">{lastDistraction || 'No distractions yet'}</div>
+          <div className="metric-tile">
+            <div className="text-[10px] font-black uppercase text-[var(--app-text-subtle)]">Last Warning</div>
+            <div className="text-xs font-semibold text-amber-700 dark:text-amber-200">{lastDistraction || 'No distractions yet'}</div>
           </div>
         </div>
       </div>

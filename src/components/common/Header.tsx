@@ -3,18 +3,19 @@ import { useApp } from '../../context/AppContext';
 import { CrackScoreGauge } from './CrackScoreGauge';
 import { StreakFlame } from './StreakFlame';
 import { NotificationDropdown } from './NotificationDropdown';
+import { getNavigationItem } from './navigationConfig';
 import {
-  Search,
-  Mic,
-  Moon,
-  Sun,
   Bell,
-  Sparkles,
   BookOpen,
   ChevronDown,
-  Zap,
-  Menu,
   Download,
+  Menu,
+  Mic,
+  Moon,
+  Search,
+  Sparkles,
+  Sun,
+  Zap,
 } from 'lucide-react';
 import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 
@@ -27,6 +28,7 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
     subjects,
     activeSubject,
     setActiveSubject,
+    activeTab,
     setGlobalSearchOpen,
     setVoiceAssistantOpen,
     notifications,
@@ -39,46 +41,64 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
   const { installApp, isStandalone, showIosHelp, setShowIosHelp } = useInstallPrompt();
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
+  const activeItem = getNavigationItem(activeTab);
 
   return (
-    <header className="sticky top-0 z-20 h-14 sm:h-16 bg-white/90 dark:bg-[#161922]/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-2.5 sm:px-4 lg:px-6 flex items-center justify-between gap-2 sm:gap-4 transition-colors duration-150 max-w-full overflow-hidden">
-      {/* Left: Mobile hamburger & Greeting / Subject Selector */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        {/* Mobile menu button */}
+    <header className="app-header sticky top-0 z-20 flex min-h-16 max-w-full items-center justify-between gap-2 overflow-visible px-2.5 py-2 sm:px-4 lg:px-6">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <button
           onClick={onOpenMobileMenu}
-          className="lg:hidden p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white"
+          className="icon-button lg:hidden"
+          title="Open navigation"
         >
           <Menu size={20} />
         </button>
 
-        {/* Mobile brand text */}
-        <div className="flex items-center gap-2 lg:hidden min-w-0">
-          <div className="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center font-bold text-sm">
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className="flex min-w-0 items-center gap-2 lg:hidden"
+          title="CrackSkull AI"
+        >
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gray-950 text-sm font-black text-white dark:bg-white dark:text-gray-950">
             CS
           </div>
-          <span className="font-bold text-sm text-gray-900 dark:text-white font-heading truncate max-w-[104px] min-[380px]:max-w-[140px]">
+          <span className="truncate font-heading text-sm font-black text-gray-950 dark:text-white">
             CrackSkull
           </span>
+        </button>
+
+        <div className="hidden min-w-0 lg:block">
+          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
+            <Sparkles size={13} className="text-teal-600 dark:text-teal-300" />
+            Active workspace
+          </div>
+          <div className="mt-0.5 flex min-w-0 items-center gap-2">
+            <span className="text-[var(--app-text-subtle)]">{activeItem.icon}</span>
+            <span className="truncate font-heading text-sm font-black text-[var(--app-text)]">
+              {activeItem.label}
+            </span>
+            <span className="hidden max-w-[22rem] truncate text-xs font-medium text-[var(--app-text-muted)] xl:block">
+              {activeItem.subtitle}
+            </span>
+          </div>
         </div>
 
-        {/* Desktop Active Subject Selector */}
         <div className="relative hidden md:block">
           <button
             onClick={() => setSubjectDropdownOpen(prev => !prev)}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700/80 hover:border-gray-400 dark:hover:border-gray-600 text-xs font-semibold text-gray-800 dark:text-gray-200 transition-all shadow-xs"
+            className="secondary-action px-3 py-2 text-xs"
           >
-            <BookOpen size={14} className="text-gray-500 dark:text-gray-400" />
-            <span className="max-w-[200px] truncate">
+            <BookOpen size={14} className="text-teal-700 dark:text-teal-300" />
+            <span className="max-w-[12rem] truncate">
               {activeSubject?.name || 'All Subjects'}
             </span>
-            <ChevronDown size={13} className="text-gray-400" />
+            <ChevronDown size={13} className="text-[var(--app-text-subtle)]" />
           </button>
 
           {subjectDropdownOpen && (
-            <div className="absolute top-full left-0 mt-2 w-72 rounded-2xl bg-white dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700 shadow-xl p-2 z-50 space-y-1">
-              <div className="text-[10px] font-bold text-gray-400 uppercase px-3 py-1.5 tracking-wider">
-                Select Active Subject
+            <div className="absolute left-0 top-full z-50 mt-2 w-80 rounded-2xl border border-[var(--app-border)] bg-[var(--app-surface)] p-2 shadow-2xl">
+              <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
+                Select active subject
               </div>
               {subjects.map(sub => (
                 <button
@@ -87,17 +107,17 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
                     setActiveSubject(sub);
                     setSubjectDropdownOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors ${
-                    activeSubject?.id === sub.id
-                      ? 'bg-black text-white dark:bg-white dark:text-black font-semibold'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-800/80 text-gray-700 dark:text-gray-300'
+                  className={`command-row mb-1 last:mb-0 ${
+                    activeSubject?.id === sub.id ? 'border-gray-950 dark:border-white' : ''
                   }`}
                 >
-                  <div className="truncate">
-                    <div className="font-semibold">{sub.name}</div>
-                    <div className="text-[10px] opacity-70 font-mono">{sub.code} • Exam: {sub.examDate || 'TBD'}</div>
-                  </div>
-                  <span className={`text-xs font-mono font-bold ${activeSubject?.id === sub.id ? 'opacity-90' : 'text-blue-600 dark:text-blue-400'}`}>
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-black">{sub.name}</span>
+                    <span className="block truncate font-mono text-[10px] text-[var(--app-text-subtle)]">
+                      {sub.code} | Exam: {sub.examDate || 'TBD'}
+                    </span>
+                  </span>
+                  <span className="font-mono text-xs font-black text-teal-700 dark:text-teal-300">
                     {sub.masteryPercentage}%
                   </span>
                 </button>
@@ -107,80 +127,74 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
         </div>
       </div>
 
-      {/* Center: Search trigger */}
-      <div className="hidden md:flex items-center gap-3 flex-1 max-w-md mx-auto">
+      <div className="hidden flex-1 items-center justify-center px-4 md:flex">
         <button
           onClick={() => setGlobalSearchOpen(true)}
-          className="w-full flex items-center justify-between px-3.5 py-1.5 rounded-full bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700/80 text-xs text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-600 transition-all shadow-xs"
+          className="toolbar-button w-full max-w-xl justify-between rounded-xl px-3.5 py-2 text-xs"
         >
-          <div className="flex items-center gap-2">
-            <Search size={14} className="text-gray-400" />
-            <span>Search topics, notes, questions...</span>
-          </div>
-          <kbd className="text-[10px] px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded font-mono text-gray-400">
-            ⌘K
+          <span className="flex min-w-0 items-center gap-2">
+            <Search size={15} />
+            <span className="truncate">Search notes, commands, quizzes, and topics</span>
+          </span>
+          <kbd className="rounded-md border border-[var(--app-border)] bg-[var(--app-surface)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--app-text-subtle)]">
+            Ctrl K
           </kbd>
         </button>
       </div>
 
-      {/* Right: Quick actions, Crack Score, Notifications & Profile */}
-      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-        {/* Crack Mode quick badge */}
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <button
           onClick={toggleCrackMode}
-          className={`hidden min-[390px]:flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+          className={`hidden items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black transition-colors min-[390px]:flex ${
             user.isCrackModeActive
-              ? 'bg-orange-500 text-white shadow-xs'
-              : 'bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700/80 text-gray-700 dark:text-gray-300 hover:border-orange-400'
+              ? 'bg-orange-500 text-white'
+              : 'border border-[var(--app-border)] bg-[var(--app-surface-muted)] text-[var(--app-text)] hover:border-orange-300'
           }`}
-          title="Toggle High-Yield Crack Mode"
+          title="Toggle Crack Mode"
         >
-          <Zap size={13} className={user.isCrackModeActive ? 'fill-white' : 'text-orange-500'} />
-          <span className="hidden sm:inline">
-            {user.isCrackModeActive ? 'CRACK MODE ON' : 'CRACK MODE'}
-          </span>
+          <Zap size={14} className={user.isCrackModeActive ? 'fill-white' : 'text-orange-500'} />
+          <span className="hidden sm:inline">{user.isCrackModeActive ? 'Sprint On' : 'Crack Mode'}</span>
         </button>
 
-        {/* Compact Crack Score dial */}
-        <div onClick={() => setActiveTab('dashboard')} className="hidden min-[430px]:block cursor-pointer">
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className="hidden min-[430px]:block"
+          title="Open dashboard"
+        >
           <CrackScoreGauge crackScore={crackScore} compact />
-        </div>
+        </button>
 
-        {/* Streak Flame */}
         <div className="hidden sm:block">
           <StreakFlame streakDays={user.streakDays} size="sm" />
         </div>
 
-        {/* Voice Assistant Mic Button */}
         {!isStandalone && (
           <button
             onClick={installApp}
-            className="p-2 rounded-full bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700/80 text-gray-600 dark:text-gray-300 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all shadow-xs"
-            title="Install app on Android, iOS, Windows, or Mac"
+            className="icon-button"
+            title="Install app"
           >
             <Download size={15} />
           </button>
         )}
 
-        {/* Voice Assistant Mic Button */}
         <button
           onClick={() => setVoiceAssistantOpen(true)}
-          className="p-2 rounded-full bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700/80 text-gray-600 dark:text-gray-300 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all shadow-xs"
-          title="Multilingual Voice AI Assistant"
+          className="icon-button"
+          title="Voice assistant"
         >
           <Mic size={15} />
         </button>
 
-        {/* Notifications */}
         <div className="relative">
           <button
             onClick={() => setNotifDropdownOpen(prev => !prev)}
-            className="relative p-2 rounded-full bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700/80 text-gray-600 dark:text-gray-300 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors shadow-xs"
+            className="icon-button relative"
             title="Notifications"
           >
             <Bell size={15} />
             {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-gray-900" />
+              <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-gray-950" />
             )}
           </button>
 
@@ -189,31 +203,30 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
           )}
         </div>
 
-        {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-full bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-700/80 text-gray-600 dark:text-gray-300 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors shadow-xs"
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          className="icon-button"
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {theme === 'dark' ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-gray-600" />}
+          {theme === 'dark' ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} />}
         </button>
 
-        {/* Profile Avatar */}
         <button
           onClick={() => setActiveTab('profile')}
-          className="w-8 h-8 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center text-xs font-bold hover:opacity-85 transition-opacity shadow-xs"
-          title="Student Profile"
+          className="grid h-9 w-9 place-items-center rounded-xl bg-gray-950 text-xs font-black text-white shadow-sm transition-opacity hover:opacity-85 dark:bg-white dark:text-gray-950"
+          title="Student profile"
         >
           {user.name.slice(0, 2).toUpperCase()}
         </button>
       </div>
+
       {showIosHelp && (
-        <div className="ios-install-panel p-4 space-y-3">
+        <div className="ios-install-panel p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-sm font-black">Install on iPhone</div>
               <div className="mt-1 text-xs leading-relaxed text-slate-300">
-                Open this site in Safari, tap the Share button, then choose Add to Home Screen.
+                Open this site in Safari, tap Share, then choose Add to Home Screen.
               </div>
             </div>
             <button
@@ -223,10 +236,10 @@ export const Header: React.FC<{ onOpenMobileMenu?: () => void }> = ({ onOpenMobi
               Close
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-bold text-slate-200">
-            <div className="rounded-xl bg-white/10 p-2">1. Safari</div>
-            <div className="rounded-xl bg-white/10 p-2">2. Share</div>
-            <div className="rounded-xl bg-white/10 p-2">3. Add</div>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] font-bold text-slate-200">
+            <div className="rounded-xl bg-white/10 p-2">Safari</div>
+            <div className="rounded-xl bg-white/10 p-2">Share</div>
+            <div className="rounded-xl bg-white/10 p-2">Add</div>
           </div>
         </div>
       )}

@@ -1,37 +1,28 @@
 import React from 'react';
 import { useApp, NavigationTab } from '../../context/AppContext';
 import { StreakFlame } from './StreakFlame';
+import { navigationGroups, navigationItems } from './navigationConfig';
 import {
-  LayoutDashboard,
-  Bot,
-  CalendarCheck,
-  Radar,
-  FileText,
-  HelpCircle,
   Mic,
-  Layers,
-  Clock,
-  BookOpen,
-  BarChart3,
-  Calendar,
-  Network,
-  User,
-  Shield,
-  Zap,
+  PanelLeftClose,
+  PanelLeftOpen,
   Search,
   Settings,
-  Calculator,
+  Shield,
+  Zap,
 } from 'lucide-react';
 
-interface NavItem {
-  id: NavigationTab;
-  label: string;
-  icon: React.ReactNode;
-  badge?: string;
-  badgeColor?: string;
-}
+const navBadges: Partial<Record<NavigationTab, string>> = {
+  'ai-tutor': '13',
+  'math-solver': 'Steps',
+  'exam-radar': 'PYQ',
+  viva: 'Oral',
+};
 
-export const Sidebar: React.FC<{ collapsed?: boolean; onToggleCollapse?: () => void }> = () => {
+export const Sidebar: React.FC<{ collapsed?: boolean; onToggleCollapse?: () => void }> = ({
+  collapsed = false,
+  onToggleCollapse,
+}) => {
   const {
     activeTab,
     setActiveTab,
@@ -43,189 +34,250 @@ export const Sidebar: React.FC<{ collapsed?: boolean; onToggleCollapse?: () => v
     setAdminOpen,
   } = useApp();
 
-  const mainNavItems: NavItem[] = [
-    { id: 'dashboard', label: 'Home Assistant', icon: <LayoutDashboard size={19} /> },
-    { id: 'ai-tutor', label: 'AI Agents Copilot', icon: <Bot size={19} />, badge: '13 Modes', badgeColor: 'bg-purple-500/20 text-purple-300' },
-    { id: 'math-solver', label: 'Math Solver', icon: <Calculator size={19} />, badge: 'Stepwise', badgeColor: 'bg-cyan-500/20 text-cyan-300' },
-    { id: 'study-plan', label: 'Adaptive Study Plan', icon: <CalendarCheck size={19} /> },
-    { id: 'exam-radar', label: 'Exam Radar', icon: <Radar size={19} />, badge: 'AI PYQ', badgeColor: 'bg-pink-500/20 text-pink-300' },
-    { id: 'document-ai', label: 'PDF Learning Studio', icon: <FileText size={19} /> },
-    { id: 'quiz', label: 'AI Quiz & Mock Test', icon: <HelpCircle size={19} /> },
-    { id: 'viva', label: 'AI Viva Simulator', icon: <Mic size={19} />, badge: 'Oral', badgeColor: 'bg-emerald-500/20 text-emerald-300' },
-    { id: 'flashcards', label: 'Spaced Flashcards', icon: <Layers size={19} /> },
-    { id: 'focus-timer', label: 'Focus Pomodoro', icon: <Clock size={19} /> },
-    { id: 'knowledge-map', label: 'Knowledge Map', icon: <Network size={19} /> },
-    { id: 'library', label: 'Digital Library', icon: <BookOpen size={19} /> },
-    { id: 'analytics', label: 'Academic Analytics', icon: <BarChart3 size={19} /> },
-    { id: 'calendar', label: 'Exam Calendar', icon: <Calendar size={19} /> },
-    { id: 'profile', label: 'Student Profile', icon: <User size={19} /> },
-  ];
-
   return (
-    <aside className="hidden lg:flex flex-col w-64 h-screen bg-white dark:bg-[#161922] border-r border-gray-200 dark:border-gray-800 sticky top-0 left-0 z-30 select-none transition-colors duration-150">
-      {/* Brand Header */}
-      <div className="p-4 px-5 border-b border-gray-100 dark:border-gray-800/80 flex items-center justify-between">
+    <aside
+      className={`app-sidebar hidden lg:flex h-screen flex-col sticky top-0 left-0 z-30 select-none transition-[width,background-color,border-color] duration-200 ${
+        collapsed ? 'w-[5.25rem]' : 'w-72'
+      }`}
+    >
+      <div className={`flex items-center border-b border-[var(--app-border)] ${collapsed ? 'justify-center p-3' : 'justify-between p-4'}`}>
         <button
           onClick={() => setActiveTab('dashboard')}
-          className="flex items-center gap-3 text-left group"
+          className={`group flex min-w-0 items-center text-left ${collapsed ? 'justify-center' : 'gap-3'}`}
+          title="CrackSkull AI"
         >
-          {/* Clean Minimal Brand Mark */}
-          <div className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center font-bold text-xl transition-transform group-hover:scale-105 shadow-sm">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gray-950 text-sm font-black text-white shadow-sm transition-transform group-hover:scale-105 dark:bg-white dark:text-gray-950">
             CS
           </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-base font-bold text-gray-900 dark:text-white tracking-tight font-heading">
-                CrackSkull
-              </span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-mono">
-                AI
-              </span>
-            </div>
-            <p className="text-[11px] text-gray-400 dark:text-gray-400 font-medium tracking-tight">
-              Exam Copilot
-            </p>
-          </div>
-        </button>
-      </div>
-
-      {/* Quick Search & Voice Bar */}
-      <div className="px-3.5 pt-3.5 pb-1.5 flex items-center gap-2">
-        <button
-          onClick={() => setGlobalSearchOpen(true)}
-          className="flex-1 flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1E2230] border border-gray-200 dark:border-gray-700/80 text-xs text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-600 transition-colors shadow-xs"
-        >
-          <div className="flex items-center gap-2">
-            <Search size={14} className="text-gray-400" />
-            <span className="font-normal">Search anything...</span>
-          </div>
-          <kbd className="text-[10px] px-1.5 py-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded font-mono text-gray-400">
-            ⌘K
-          </kbd>
-        </button>
-
-        <button
-          onClick={() => setVoiceAssistantOpen(true)}
-          className="p-2 rounded-xl bg-gray-50 dark:bg-[#1E2230] border border-gray-200 dark:border-gray-700/80 text-gray-600 dark:text-gray-300 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
-          title="Voice AI Assistant"
-        >
-          <Mic size={15} />
-        </button>
-      </div>
-
-      {/* Signature CRACK MODE Toggle Banner */}
-      <div className="px-3.5 py-2">
-        <div
-          onClick={toggleCrackMode}
-          className={`cursor-pointer rounded-2xl p-3 border transition-all duration-200 ${
-            user.isCrackModeActive
-              ? 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50 shadow-xs'
-              : 'bg-gray-50 dark:bg-[#1A1D27] border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-1.5">
-              <Zap
-                size={15}
-                className={user.isCrackModeActive ? 'text-orange-500 fill-orange-500' : 'text-gray-400'}
-              />
-              <span className="text-xs font-bold text-gray-900 dark:text-white tracking-tight">
-                Crack Mode
-              </span>
-            </div>
-            <span
-              className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
-                user.isCrackModeActive
-                  ? 'bg-orange-500 text-white font-mono'
-                  : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-              }`}
-            >
-              {user.isCrackModeActive ? 'ACTIVE ⚡' : 'OFF'}
-            </span>
-          </div>
-          <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">
-            {user.isCrackModeActive
-              ? 'Targeting top 90%+ exam probability topics.'
-              : '3-day high-yield emergency sprint revision.'}
-          </p>
-        </div>
-      </div>
-
-      {/* Navigation Scrollable Area */}
-      <div className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
-        <div className="text-[10px] font-bold tracking-widest text-gray-400 dark:text-gray-400 uppercase px-3 py-1.5">
-          Academic Navigation
-        </div>
-        {mainNavItems.map(item => {
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all ${
-                isActive
-                  ? 'bg-black text-white dark:bg-white dark:text-black font-semibold shadow-xs'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className={isActive ? 'text-white dark:text-black' : 'text-gray-400 dark:text-gray-400'}>
-                  {item.icon}
+          {!collapsed && (
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="truncate font-heading text-base font-black text-gray-950 dark:text-white">
+                  CrackSkull
                 </span>
-                <span>{item.label}</span>
+                <span className="rounded-full bg-teal-50 px-1.5 py-0.5 font-mono text-[10px] font-black text-teal-700 dark:bg-teal-400/10 dark:text-teal-200">
+                  AI
+                </span>
               </div>
-              {item.badge && (
-                <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                    isActive
-                      ? 'bg-white/20 text-white dark:bg-black/10 dark:text-black'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
-                  }`}
-                >
-                  {item.badge}
-                </span>
-              )}
+              <p className="truncate text-[11px] font-semibold text-gray-500 dark:text-slate-400">
+                Exam preparation cockpit
+              </p>
+            </div>
+          )}
+        </button>
+
+        {!collapsed && (
+          <button
+            onClick={onToggleCollapse}
+            className="icon-button"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose size={16} />
+          </button>
+        )}
+      </div>
+
+      <div className={`border-b border-[var(--app-border)] ${collapsed ? 'space-y-2 p-3' : 'space-y-2.5 p-3.5'}`}>
+        {collapsed ? (
+          <>
+            <button
+              onClick={() => setGlobalSearchOpen(true)}
+              className="icon-button mx-auto"
+              title="Command search"
+            >
+              <Search size={16} />
             </button>
+            <button
+              onClick={() => setVoiceAssistantOpen(true)}
+              className="icon-button mx-auto"
+              title="Voice assistant"
+            >
+              <Mic size={16} />
+            </button>
+            <button
+              onClick={onToggleCollapse}
+              className="icon-button mx-auto"
+              title="Expand sidebar"
+            >
+              <PanelLeftOpen size={16} />
+            </button>
+          </>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setGlobalSearchOpen(true)}
+              className="toolbar-button flex-1 justify-between rounded-xl px-3 py-2 text-xs"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <Search size={14} />
+                <span className="truncate font-semibold">Search or run command</span>
+              </span>
+              <kbd className="rounded-md border border-[var(--app-border)] bg-[var(--app-surface)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--app-text-subtle)]">
+                Ctrl K
+              </kbd>
+            </button>
+            <button
+              onClick={() => setVoiceAssistantOpen(true)}
+              className="icon-button"
+              title="Voice assistant"
+            >
+              <Mic size={16} />
+            </button>
+          </div>
+        )}
+
+        <button
+          onClick={toggleCrackMode}
+          className={`w-full border transition-colors ${
+            collapsed
+              ? `grid h-11 place-items-center rounded-xl ${
+                  user.isCrackModeActive
+                    ? 'border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-500/40 dark:bg-orange-500/10 dark:text-orange-200'
+                    : 'border-[var(--app-border)] bg-[var(--app-surface-muted)] text-[var(--app-text-muted)]'
+                }`
+              : `rounded-xl p-3 text-left ${
+                  user.isCrackModeActive
+                    ? 'border-orange-300 bg-orange-50 text-orange-900 dark:border-orange-500/40 dark:bg-orange-500/10 dark:text-orange-100'
+                    : 'border-[var(--app-border)] bg-[var(--app-surface-muted)] text-[var(--app-text)] hover:border-[var(--app-border-strong)]'
+                }`
+          }`}
+          title="Toggle Crack Mode"
+        >
+          {collapsed ? (
+            <Zap size={17} className={user.isCrackModeActive ? 'fill-orange-500 text-orange-500' : ''} />
+          ) : (
+            <>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-xs font-black">
+                  <Zap size={15} className={user.isCrackModeActive ? 'fill-orange-500 text-orange-500' : 'text-orange-500'} />
+                  Crack Mode
+                </span>
+                <span className={`status-pill ${user.isCrackModeActive ? 'border-orange-300 bg-orange-500 text-white dark:border-orange-500 dark:bg-orange-500' : ''}`}>
+                  {user.isCrackModeActive ? 'Active' : 'Off'}
+                </span>
+              </div>
+              <p className="mt-2 text-[11px] leading-4 text-[var(--app-text-muted)]">
+                {user.isCrackModeActive
+                  ? 'Prioritizing high-yield topics and PYQ practice.'
+                  : 'Switch to a 3-day emergency revision sprint.'}
+              </p>
+            </>
+          )}
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-3 py-3">
+        {navigationGroups.map(group => {
+          const items = navigationItems.filter(item => item.group === group);
+          if (!items.length) return null;
+
+          return (
+            <div key={group} className="mb-4 last:mb-0">
+              {!collapsed && (
+                <div className="px-3 pb-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
+                  {group}
+                </div>
+              )}
+
+              <div className="space-y-1">
+                {items.map(item => {
+                  const isActive = activeTab === item.id;
+                  const badge = navBadges[item.id];
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`group flex w-full items-center gap-2 rounded-xl text-left text-xs transition-colors ${
+                        collapsed
+                          ? `h-11 justify-center px-0 ${isActive ? 'bg-gray-950 text-white dark:bg-white dark:text-gray-950' : 'text-[var(--app-text-muted)] hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-text)]'}`
+                          : `justify-between px-3 py-2.5 ${isActive ? 'bg-gray-950 text-white shadow-sm dark:bg-white dark:text-gray-950' : 'text-[var(--app-text-muted)] hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-text)]'}`
+                      }`}
+                      title={`${item.label}: ${item.subtitle}`}
+                    >
+                      <span className={`flex min-w-0 items-center ${collapsed ? 'justify-center' : 'gap-2.5'}`}>
+                        <span className={isActive ? 'text-current' : 'text-[var(--app-text-subtle)] group-hover:text-current'}>
+                          {item.icon}
+                        </span>
+                        {!collapsed && (
+                          <span className="min-w-0">
+                            <span className="block truncate font-bold">{item.label}</span>
+                            <span className={`block truncate text-[10px] font-medium ${isActive ? 'text-white/70 dark:text-gray-950/60' : 'text-[var(--app-text-subtle)]'}`}>
+                              {item.subtitle}
+                            </span>
+                          </span>
+                        )}
+                      </span>
+
+                      {!collapsed && badge && (
+                        <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-black ${isActive ? 'bg-white/15 text-white dark:bg-black/10 dark:text-gray-950' : 'bg-[var(--app-surface)] text-[var(--app-text-subtle)]'}`}>
+                          {badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </div>
 
-      {/* Bottom User & Settings Footer */}
-      <div className="p-3.5 border-t border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-[#13161F] space-y-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center text-xs font-bold shadow-xs">
+      <div className={`border-t border-[var(--app-border)] bg-[var(--app-surface-muted)] ${collapsed ? 'p-3' : 'p-3.5'}`}>
+        {collapsed ? (
+          <div className="space-y-2">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className="grid h-10 w-10 place-items-center rounded-xl bg-gray-950 text-xs font-black text-white dark:bg-white dark:text-gray-950"
+              title={user.name}
+            >
               {user.name.slice(0, 2).toUpperCase()}
+            </button>
+            <button onClick={() => setSettingsOpen(true)} className="icon-button mx-auto" title="Settings">
+              <Settings size={15} />
+            </button>
+            <button onClick={() => setAdminOpen(true)} className="icon-button mx-auto" title="Admin">
+              <Shield size={15} />
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className="flex min-w-0 items-center gap-2.5 text-left"
+              >
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gray-950 text-xs font-black text-white dark:bg-white dark:text-gray-950">
+                  {user.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate text-xs font-black text-[var(--app-text)]">{user.name}</div>
+                  <div className="truncate font-mono text-[10px] text-[var(--app-text-subtle)]">
+                    Level {user.level} scholar
+                  </div>
+                </div>
+              </button>
+              <StreakFlame streakDays={user.streakDays} size="sm" />
             </div>
-            <div className="text-left leading-tight">
-              <div className="text-xs font-semibold text-gray-900 dark:text-white truncate max-w-[100px]">
-                {user.name}
-              </div>
-              <div className="text-[10px] text-gray-400 dark:text-gray-400 font-mono">
-                Lvl {user.level} Scholar
-              </div>
+
+            <div className="grid grid-cols-2 gap-2 border-t border-[var(--app-border)] pt-3">
+              <button
+                onClick={() => setSettingsOpen(true)}
+                className="secondary-action px-3 py-2 text-[11px]"
+              >
+                <Settings size={13} />
+                Settings
+              </button>
+              <button
+                onClick={() => setAdminOpen(true)}
+                className="secondary-action px-3 py-2 text-[11px]"
+              >
+                <Shield size={13} />
+                Admin
+              </button>
             </div>
           </div>
-          <StreakFlame streakDays={user.streakDays} size="sm" />
-        </div>
-
-        <div className="flex items-center justify-between pt-1 gap-1 border-t border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400">
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            <Settings size={13} />
-            <span>Settings</span>
-          </button>
-
-          <button
-            onClick={() => setAdminOpen(true)}
-            className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            <Shield size={13} />
-            <span>Admin</span>
-          </button>
-        </div>
+        )}
       </div>
     </aside>
   );

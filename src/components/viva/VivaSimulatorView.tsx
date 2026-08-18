@@ -198,19 +198,19 @@ export const VivaSimulatorView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-16 max-w-5xl mx-auto">
+    <div className="view-stack max-w-5xl space-y-5">
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/40 via-purple-950/40 to-slate-900/60 border border-emerald-500/30 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="view-hero flex flex-col items-start justify-between gap-4 p-5 sm:p-6 md:flex-row md:items-center">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
               <GraduationCap size={22} />
             </div>
-            <h1 className="text-2xl font-extrabold font-heading text-white tracking-tight">
+            <h1 className="view-title text-2xl">
               AI University Viva & Oral Simulator
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300">
+          <p className="view-copy text-xs sm:text-sm">
             Simulate realistic, rigorous university oral examinations. The AI Examiner speaks questions, listens to your answers, evaluates technical depth, and scores readiness.
           </p>
         </div>
@@ -218,34 +218,34 @@ export const VivaSimulatorView: React.FC = () => {
 
       {!sessionActive ? (
         /* Configuration Setup Screen */
-        <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-5">
-          <div className="flex items-center gap-3">
+        <div className="surface-card space-y-5 p-5 sm:p-6">
+          <div className="segmented-control">
             <button
               onClick={() => setVivaType('theory')}
-              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all ${
+              className={`segmented-option ${
                 vivaType === 'theory'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                  : 'bg-slate-950 text-slate-400 border border-slate-800'
+                  ? 'segmented-option-active'
+                  : ''
               }`}
             >
-              🎓 Course Theory Viva
+              Course Theory Viva
             </button>
             <button
               onClick={() => setVivaType('project')}
-              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all ${
+              className={`segmented-option ${
                 vivaType === 'project'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                  : 'bg-slate-950 text-slate-400 border border-slate-800'
+                  ? 'segmented-option-active'
+                  : ''
               }`}
             >
-              💻 Capstone / Project Defense Viva
+              Capstone / Project Defense Viva
             </button>
           </div>
 
           {vivaType === 'theory' ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="mb-1 block text-xs font-semibold text-[var(--app-text-muted)]">
                   Examination Subject & Topic
                 </label>
                 <input
@@ -253,14 +253,14 @@ export const VivaSimulatorView: React.FC = () => {
                   value={topic}
                   onChange={e => setTopic(e.target.value)}
                   placeholder="e.g. Transactions, Normalization, SQL Locking"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="form-control w-full px-3.5 py-2.5 text-xs"
                 />
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="mb-1 block text-xs font-semibold text-[var(--app-text-muted)]">
                   Project Title
                 </label>
                 <input
@@ -268,12 +268,12 @@ export const VivaSimulatorView: React.FC = () => {
                   value={projectTitle}
                   onChange={e => setProjectTitle(e.target.value)}
                   placeholder="e.g. Cloud Native Microservices Platform"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="form-control w-full px-3.5 py-2.5 text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="mb-1 block text-xs font-semibold text-[var(--app-text-muted)]">
                   Tech Stack & Architecture
                 </label>
                 <input
@@ -281,7 +281,7 @@ export const VivaSimulatorView: React.FC = () => {
                   value={projectTechStack}
                   onChange={e => setProjectTechStack(e.target.value)}
                   placeholder="e.g. React, Node.js, PostgreSQL, Docker, Redis"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="form-control w-full px-3.5 py-2.5 text-xs"
                 />
               </div>
             </div>
@@ -290,7 +290,7 @@ export const VivaSimulatorView: React.FC = () => {
           <div className="pt-2">
             <button
               onClick={handleStartViva}
-              className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition-all"
+              className="primary-action bg-emerald-600 px-6 py-3 text-xs text-white hover:bg-emerald-500 dark:bg-emerald-500 dark:text-white"
             >
               <Mic size={16} />
               <span>Enter Viva Examination Room</span>
@@ -299,93 +299,93 @@ export const VivaSimulatorView: React.FC = () => {
         </div>
       ) : finalScore !== null ? (
         /* Final Viva Scorecard */
-        <div className="p-8 rounded-3xl bg-gradient-to-b from-emerald-950/40 to-slate-900 border border-emerald-500/30 text-center space-y-6 animate-in zoom-in-95">
-          <div className="w-20 h-20 rounded-3xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-300 shadow-xl shadow-emerald-500/20">
+        <div className="surface-card-strong animate-in zoom-in-95 space-y-6 p-8 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
             <Trophy size={40} className="animate-bounce" />
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold font-heading text-white">
+            <h2 className="font-heading text-2xl font-black text-[var(--app-text)]">
               Viva Examination Concluded
             </h2>
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-[var(--app-text-muted)]">
               Evaluated by AI University Examination Board for {vivaType === 'theory' ? topic : projectTitle}
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 max-w-xs mx-auto">
-            <div className="text-4xl font-extrabold font-mono text-emerald-400">
+          <div className="metric-tile mx-auto max-w-xs">
+            <div className="font-mono text-4xl font-black text-emerald-700 dark:text-emerald-300">
               {finalScore} / 100
             </div>
-            <div className="text-[11px] text-slate-400 uppercase font-semibold mt-1">
+            <div className="mt-1 text-[11px] font-semibold uppercase text-[var(--app-text-subtle)]">
               Oral Defense Score
             </div>
           </div>
 
           <div className="space-y-3 max-w-2xl mx-auto text-left">
             {history.map((h, i) => (
-              <div key={i} className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-1.5 text-xs">
-                <div className="flex items-center justify-between text-slate-400 font-mono">
+              <div key={i} className="surface-muted space-y-1.5 p-4 text-xs">
+                <div className="flex items-center justify-between font-mono text-[var(--app-text-muted)]">
                   <span>Question {h.questionNumber}</span>
-                  <span className="text-emerald-400 font-bold">{h.score}/100</span>
+                  <span className="font-black text-emerald-700 dark:text-emerald-300">{h.score}/100</span>
                 </div>
-                <div className="font-semibold text-white">"{h.question}"</div>
-                <div className="text-slate-300 text-[11px] italic">Your Answer: "{h.answer}"</div>
-                <div className="text-purple-300 text-[11px]">Examiner Feedback: {h.feedback}</div>
-                <div className="text-emerald-300 text-[11px]">Ideal Answer: {h.idealAnswer}</div>
+                <div className="font-semibold text-[var(--app-text)]">"{h.question}"</div>
+                <div className="text-[11px] italic text-[var(--app-text-muted)]">Your Answer: "{h.answer}"</div>
+                <div className="text-[11px] text-blue-700 dark:text-blue-300">Examiner Feedback: {h.feedback}</div>
+                <div className="text-[11px] text-emerald-700 dark:text-emerald-300">Ideal Answer: {h.idealAnswer}</div>
               </div>
             ))}
           </div>
 
           <button
             onClick={() => setSessionActive(false)}
-            className="px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs"
+            className="primary-action bg-emerald-600 px-6 py-2.5 text-xs text-white hover:bg-emerald-500 dark:bg-emerald-500 dark:text-white"
           >
             Start Another Viva
           </button>
         </div>
       ) : (
         /* Active Live Viva Room */
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900 border border-slate-800 space-y-6 shadow-2xl">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="surface-card space-y-6 p-5 sm:p-6">
+          <div className="flex items-center justify-between border-b border-[var(--app-border)] pb-4">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
-              <span className="text-xs font-bold text-white font-mono uppercase">
+              <span className="h-3 w-3 animate-ping rounded-full bg-red-500" />
+              <span className="font-mono text-xs font-black uppercase text-[var(--app-text)]">
                 Examiner Session Active • Question {questionCount} of 4
               </span>
             </div>
             <button
               onClick={() => setSessionActive(false)}
-              className="text-xs text-slate-400 hover:text-white px-3 py-1 rounded-lg bg-slate-800"
+              className="secondary-action px-3 py-1 text-xs"
             >
               End Viva
             </button>
           </div>
 
           {/* Examiner Box */}
-          <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/30 to-slate-950 border border-emerald-500/30 space-y-3">
+          <div className="surface-muted space-y-3 border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold font-heading">
+              <div className="flex items-center gap-2 font-heading text-xs font-black text-emerald-700 dark:text-emerald-300">
                 <GraduationCap size={18} />
                 <span>Prof. Examiner (AI Board):</span>
               </div>
               <button
                 onClick={() => aiService.speakText(currentQuestion)}
-                className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
+                className="flex items-center gap-1 text-xs font-bold text-[var(--app-text-muted)] hover:text-[var(--app-text)]"
               >
                 <Volume2 size={14} />
                 <span>Replay Voice</span>
               </button>
             </div>
 
-            <h3 className="text-base sm:text-lg font-bold text-white leading-relaxed">
+            <h3 className="text-base font-black leading-relaxed text-[var(--app-text)] sm:text-lg">
               "{currentQuestion}"
             </h3>
 
-            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-emerald-300">Expected Keypoints:</span>
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--app-text-muted)]">
+              <span className="font-semibold text-emerald-700 dark:text-emerald-300">Expected Keypoints:</span>
               {expectedKeywords.map((k, i) => (
-                <span key={i} className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 font-mono">
+                <span key={i} className="status-pill font-mono">
                   {k}
                 </span>
               ))}
@@ -395,11 +395,11 @@ export const VivaSimulatorView: React.FC = () => {
           {/* Student Answer Box */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-300">
+              <label className="text-xs font-semibold text-[var(--app-text-muted)]">
                 Your Spoken or Typed Oral Answer:
               </label>
-              <span className="text-[11px] text-slate-400 font-mono">
-                {isListening ? '🎙️ Listening to microphone...' : 'Type or speak'}
+              <span className="font-mono text-[11px] text-[var(--app-text-muted)]">
+                {isListening ? 'Listening to microphone...' : 'Type or speak'}
               </span>
             </div>
 
@@ -409,17 +409,17 @@ export const VivaSimulatorView: React.FC = () => {
                 value={studentAnswer}
                 onChange={e => setStudentAnswer(e.target.value)}
                 placeholder="Click the microphone to speak your answer, or type it here in detail..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 leading-relaxed"
+                className="form-control w-full p-4 text-xs leading-relaxed sm:text-sm"
               />
             </div>
 
             <div className="flex items-center justify-between gap-3">
               <button
                 onClick={toggleMic}
-                className={`px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-colors ${
                   isListening
-                    ? 'bg-red-600 text-white animate-pulse shadow-lg shadow-red-600/40'
-                    : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                    ? 'primary-action animate-pulse bg-red-600 text-white hover:bg-red-500 dark:bg-red-600 dark:text-white'
+                    : 'secondary-action'
                 }`}
               >
                 {isListening ? <MicOff size={16} /> : <Mic size={16} />}
@@ -429,7 +429,7 @@ export const VivaSimulatorView: React.FC = () => {
               <button
                 onClick={handleEvaluateAndNext}
                 disabled={isEvaluating || !studentAnswer.trim()}
-                className="px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs shadow-md shadow-emerald-600/30 flex items-center gap-2 disabled:opacity-50 transition-all"
+                className="primary-action bg-emerald-600 px-6 py-2.5 text-xs text-white hover:bg-emerald-500 disabled:opacity-50 dark:bg-emerald-500 dark:text-white"
               >
                 <Send size={14} />
                 <span>{isEvaluating ? 'Examiner Grading...' : 'Submit to Examiner'}</span>
@@ -438,30 +438,30 @@ export const VivaSimulatorView: React.FC = () => {
           </div>
 
           {lastEvaluation && (
-            <div className="p-5 rounded-3xl bg-slate-950/70 border border-emerald-500/30 space-y-4">
+            <div className="surface-muted space-y-4 border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold">
+                <div className="flex items-center gap-2 text-xs font-black text-emerald-700 dark:text-emerald-300">
                   <CheckCircle2 size={16} />
                   <span>Previous Answer Review</span>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-black">
+                <span className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-black text-white dark:bg-emerald-500">
                   {lastEvaluation.score}/100
                 </span>
               </div>
 
               <div className="grid md:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
-                  <div className="font-bold text-rose-300 flex items-center gap-1.5">
+                <div className="surface-card p-3">
+                  <div className="flex items-center gap-1.5 font-black text-rose-700 dark:text-rose-300">
                     <AlertCircle size={14} />
                     Mistake Analysis
                   </div>
-                  <p className="mt-2 text-slate-300 leading-5">{lastEvaluation.mistakeAnalysis}</p>
+                  <p className="mt-2 leading-5 text-[var(--app-text-muted)]">{lastEvaluation.mistakeAnalysis}</p>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
-                  <div className="font-bold text-purple-300">Missing Keywords</div>
+                <div className="surface-card p-3">
+                  <div className="font-black text-blue-700 dark:text-blue-300">Missing Keywords</div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {(lastEvaluation.missingKeywords?.length ? lastEvaluation.missingKeywords : ['No major keyword gap']).map((keyword: string) => (
-                      <span key={keyword} className="px-2 py-0.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 font-mono text-[11px]">
+                      <span key={keyword} className="status-pill font-mono text-[11px]">
                         {keyword}
                       </span>
                     ))}
@@ -469,14 +469,14 @@ export const VivaSimulatorView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 text-xs">
-                <div className="font-bold text-emerald-300">Correct / Ideal Viva Answer</div>
-                <p className="mt-2 text-slate-200 leading-5">{lastEvaluation.idealAnswer}</p>
+              <div className="surface-card border-emerald-200 bg-emerald-50 p-3 text-xs dark:border-emerald-500/30 dark:bg-emerald-500/10">
+                <div className="font-black text-emerald-700 dark:text-emerald-300">Correct / Ideal Viva Answer</div>
+                <p className="mt-2 leading-5 text-[var(--app-text)]">{lastEvaluation.idealAnswer}</p>
               </div>
 
-              <div className="p-3 rounded-2xl bg-purple-950/20 border border-purple-500/30 text-xs">
-                <div className="font-bold text-purple-300">Micro Lesson</div>
-                <p className="mt-2 text-slate-200 leading-5">{lastEvaluation.microLesson}</p>
+              <div className="surface-card border-blue-200 bg-blue-50 p-3 text-xs dark:border-blue-500/30 dark:bg-blue-500/10">
+                <div className="font-black text-blue-700 dark:text-blue-300">Micro Lesson</div>
+                <p className="mt-2 leading-5 text-[var(--app-text)]">{lastEvaluation.microLesson}</p>
               </div>
             </div>
           )}

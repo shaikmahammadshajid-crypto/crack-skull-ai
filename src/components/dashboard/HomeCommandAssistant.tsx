@@ -18,7 +18,7 @@ import { useApp, NavigationTab } from '../../context/AppContext';
 import { aiService } from '../../services/aiService';
 import { AssistantLanguageCode, assistantLanguages, getAssistantLanguage } from '../../services/languageService';
 import { inferChatMode, parseAppCommand } from '../../services/appCommandService';
-import { MarkdownAnswer } from '../ai/AITutorView';
+import { MarkdownAnswer } from '../common/MarkdownAnswer';
 
 interface HomeAssistantTurn {
   id: string;
@@ -177,21 +177,21 @@ export const HomeCommandAssistant: React.FC = () => {
   };
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-[#161922]">
-      <div className="border-b border-gray-200 p-4 dark:border-gray-800 sm:p-5">
+    <section className="surface-card overflow-hidden">
+      <div className="border-b border-[var(--app-border)] p-4 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-black p-2.5 text-white dark:bg-white dark:text-black">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gray-950 text-white dark:bg-white dark:text-gray-950">
               <Bot size={20} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-gray-950 dark:text-white">Home Assistant</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{statusText}</p>
+              <h2 className="font-heading text-base font-black text-[var(--app-text)]">Home Assistant</h2>
+              <p className="text-xs text-[var(--app-text-muted)]">{statusText}</p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <label className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-700 dark:border-gray-800 dark:bg-[#1A1D27] dark:text-gray-200">
+            <label className="secondary-action px-3 py-2 text-xs">
               <Languages size={14} />
               <select
                 value={language}
@@ -207,21 +207,21 @@ export const HomeCommandAssistant: React.FC = () => {
             </label>
             <button
               onClick={() => setGlobalSearchOpen(true)}
-              className="rounded-xl border border-gray-200 bg-gray-50 p-2.5 text-gray-600 transition-colors hover:text-gray-950 dark:border-gray-800 dark:bg-[#1A1D27] dark:text-gray-300 dark:hover:text-white"
+              className="icon-button"
               title="Search"
             >
               <Search size={16} />
             </button>
             <button
               onClick={() => setVoiceAssistantOpen(true)}
-              className="rounded-xl border border-gray-200 bg-gray-50 p-2.5 text-gray-600 transition-colors hover:text-gray-950 dark:border-gray-800 dark:bg-[#1A1D27] dark:text-gray-300 dark:hover:text-white"
+              className="icon-button"
               title="Voice assistant"
             >
               <Mic size={16} />
             </button>
             <button
               onClick={toggleTheme}
-              className="rounded-xl border border-gray-200 bg-gray-50 p-2.5 text-gray-600 transition-colors hover:text-gray-950 dark:border-gray-800 dark:bg-[#1A1D27] dark:text-gray-300 dark:hover:text-white"
+              className="icon-button"
               title="Toggle theme"
             >
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
@@ -232,15 +232,15 @@ export const HomeCommandAssistant: React.FC = () => {
 
       <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-3">
-          <div className="max-h-[22rem] overflow-y-auto rounded-2xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-[#10141E]">
+          <div className="surface-muted max-h-[22rem] overflow-y-auto p-3">
             <div className="space-y-3">
               {turns.map(turn => (
                 <div key={turn.id} className={`flex ${turn.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div
                     className={`max-w-[92%] rounded-2xl px-3.5 py-3 text-xs leading-5 ${
                       turn.role === 'user'
-                        ? 'bg-black text-white dark:bg-white dark:text-black'
-                        : 'border border-gray-200 bg-white text-gray-800 dark:border-gray-800 dark:bg-[#171D2A] dark:text-gray-100'
+                        ? 'bg-gray-950 text-white dark:bg-white dark:text-gray-950'
+                        : 'border border-[var(--app-border)] bg-[var(--app-surface)] text-[var(--app-text)]'
                     }`}
                   >
                     {turn.role === 'assistant' ? (
@@ -252,7 +252,7 @@ export const HomeCommandAssistant: React.FC = () => {
                 </div>
               ))}
               {isLoading && (
-                <div className="flex w-fit items-center gap-2 rounded-2xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-800 dark:border-cyan-900/50 dark:bg-cyan-950/30 dark:text-cyan-200">
+                <div className="flex w-fit items-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-bold text-teal-800 dark:border-teal-500/30 dark:bg-teal-500/10 dark:text-teal-200">
                   <Loader2 size={14} className="animate-spin" />
                   Thinking and checking app actions...
                 </div>
@@ -271,12 +271,12 @@ export const HomeCommandAssistant: React.FC = () => {
               value={input}
               onChange={event => setInput(event.target.value)}
               placeholder="Ask to open a section, solve a problem, change theme, or plan study"
-              className="min-h-12 flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-4 text-sm text-gray-950 outline-none transition-colors placeholder:text-gray-400 focus:border-black dark:border-gray-800 dark:bg-[#10141E] dark:text-white dark:focus:border-white"
+              className="form-control min-h-12 flex-1 px-4 text-sm"
             />
             <button
               type="button"
               onClick={toggleVoice}
-              className="grid h-12 w-12 place-items-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-800 dark:bg-[#1A1D27] dark:text-gray-200 dark:hover:bg-gray-800"
+              className="icon-button icon-button-lg"
               title={isSpeaking ? 'Stop voice' : 'Read last answer'}
             >
               {isSpeaking ? <VolumeX size={18} /> : <Volume2 size={18} />}
@@ -284,7 +284,7 @@ export const HomeCommandAssistant: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="grid h-12 w-12 place-items-center rounded-2xl bg-black text-white transition-colors hover:bg-gray-800 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+              className="primary-action h-12 w-12 disabled:opacity-40"
               title="Run command"
             >
               {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
@@ -293,8 +293,8 @@ export const HomeCommandAssistant: React.FC = () => {
         </div>
 
         <aside className="space-y-3">
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-[#10141E]">
-            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+          <div className="surface-muted p-4">
+            <div className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
               <Compass size={14} />
               Fast Commands
             </div>
@@ -303,7 +303,7 @@ export const HomeCommandAssistant: React.FC = () => {
                 <button
                   key={chip}
                   onClick={() => handleSubmit(chip)}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-left text-xs font-semibold leading-5 text-gray-700 transition-colors hover:border-gray-300 hover:text-gray-950 dark:border-gray-800 dark:bg-[#171D2A] dark:text-gray-300 dark:hover:border-gray-700 dark:hover:text-white"
+                  className="command-row px-3 py-2 text-xs font-semibold leading-5"
                 >
                   {chip}
                 </button>
@@ -314,13 +314,13 @@ export const HomeCommandAssistant: React.FC = () => {
           <button
             onClick={() => lastTarget && setActiveTab(lastTarget)}
             disabled={!lastTarget}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-40 dark:border-gray-800 dark:bg-[#161922] dark:text-gray-200 dark:hover:bg-[#1A1D27]"
+            className="secondary-action w-full px-4 py-3 text-xs disabled:opacity-40"
           >
             <CheckCircle2 size={15} />
             Open Last Target
           </button>
 
-          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-xs leading-5 text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-200">
+          <div className="surface-card border-blue-200 bg-blue-50 p-4 text-xs leading-5 text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100">
             <div className="mb-1 flex items-center gap-2 font-bold">
               <Sparkles size={14} />
               Reliability Rule
