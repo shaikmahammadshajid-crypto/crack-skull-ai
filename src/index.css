@@ -156,11 +156,35 @@
   border-color: #E5E7EB !important;
 }
 
-.light [class*="text-white"],
-.light [class*="text-slate-100"],
-.light [class*="text-slate-200"],
-.light [class*="text-slate-300"] {
+.light :is(
+  [class*="bg-slate-950"],
+  [class*="bg-slate-900"],
+  [class*="bg-\\[\\#0E1322\\]"],
+  [class*="bg-\\[\\#0A0D18\\]"],
+  [class*="bg-\\[\\#111520\\]"],
+  [class*="bg-\\[\\#171D2A\\]"]
+):is([class*="text-white"], [class*="text-slate-100"], [class*="text-slate-200"], [class*="text-slate-300"]),
+.light :is(
+  [class*="bg-slate-950"],
+  [class*="bg-slate-900"],
+  [class*="bg-\\[\\#0E1322\\]"],
+  [class*="bg-\\[\\#0A0D18\\]"],
+  [class*="bg-\\[\\#111520\\]"],
+  [class*="bg-\\[\\#171D2A\\]"]
+) :is([class*="text-white"], [class*="text-slate-100"], [class*="text-slate-200"], [class*="text-slate-300"]) {
   color: #111827 !important;
+}
+
+.light [class*="bg-black"][class*="text-white"],
+.light [class*="bg-black"] [class*="text-white"],
+.light [class*="bg-orange-500"][class*="text-white"],
+.light [class*="bg-orange-600"][class*="text-white"],
+.light [class*="bg-blue-600"][class*="text-white"],
+.light [class*="bg-purple-600"][class*="text-white"],
+.light [class*="bg-cyan-600"][class*="text-white"],
+.light [class*="bg-emerald-600"][class*="text-white"],
+.light [class*="bg-rose-600"][class*="text-white"] {
+  color: #FFFFFF !important;
 }
 
 .light [class*="text-slate-400"],
