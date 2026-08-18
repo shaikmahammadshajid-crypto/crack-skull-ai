@@ -18,9 +18,9 @@ import {
   User,
   Shield,
   Zap,
-  Sparkles,
   Search,
   Settings,
+  Calculator,
 } from 'lucide-react';
 
 interface NavItem {
@@ -44,8 +44,9 @@ export const Sidebar: React.FC<{ collapsed?: boolean; onToggleCollapse?: () => v
   } = useApp();
 
   const mainNavItems: NavItem[] = [
-    { id: 'dashboard', label: 'Command Center', icon: <LayoutDashboard size={19} /> },
-    { id: 'ai-tutor', label: 'AI Agents Copilot', icon: <Bot size={19} />, badge: '12 Agents', badgeColor: 'bg-purple-500/20 text-purple-300' },
+    { id: 'dashboard', label: 'Home Assistant', icon: <LayoutDashboard size={19} /> },
+    { id: 'ai-tutor', label: 'AI Agents Copilot', icon: <Bot size={19} />, badge: '13 Modes', badgeColor: 'bg-purple-500/20 text-purple-300' },
+    { id: 'math-solver', label: 'Math Solver', icon: <Calculator size={19} />, badge: 'Stepwise', badgeColor: 'bg-cyan-500/20 text-cyan-300' },
     { id: 'study-plan', label: 'Adaptive Study Plan', icon: <CalendarCheck size={19} /> },
     { id: 'exam-radar', label: 'Exam Radar', icon: <Radar size={19} />, badge: 'AI PYQ', badgeColor: 'bg-pink-500/20 text-pink-300' },
     { id: 'document-ai', label: 'PDF Learning Studio', icon: <FileText size={19} /> },

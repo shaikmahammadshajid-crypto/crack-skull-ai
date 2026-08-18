@@ -138,6 +138,12 @@ const languageNames: Record<string, string> = {
   'es-ES': 'Spanish',
   'fr-FR': 'French',
   'ar-SA': 'Arabic',
+  'de-DE': 'German',
+  'pt-BR': 'Brazilian Portuguese',
+  'id-ID': 'Indonesian',
+  'zh-CN': 'Simplified Chinese',
+  'ja-JP': 'Japanese',
+  'ko-KR': 'Korean',
 };
 
 // AI Chatbot endpoint with multilingual responses and specialized academic agents.
@@ -1079,7 +1085,7 @@ ${quadratic.steps}
 Always calculate the discriminant first. It tells whether the roots are real distinct, real equal, or complex.`;
   }
 
-  const definiteIntegral = message.match(/integrat(?:e|ion|al)?\s+(?:of\s+)?x\^?(\d+)\s+from\s+(-?\d+(?:\.\d+)?)\s+to\s+(-?\d+(?:\.\d+)?)/i);
+  const definiteIntegral = message.match(/(?:integral|integrate|integration)\s+(?:of\s+)?x(?:\^|\*\*)?(\d+)\s+from\s+(-?\d+(?:\.\d+)?)\s+to\s+(-?\d+(?:\.\d+)?)/i);
   if (definiteIntegral) {
     const power = Number(definiteIntegral[1]);
     const lower = Number(definiteIntegral[2]);

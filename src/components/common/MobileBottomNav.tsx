@@ -3,21 +3,19 @@ import { useApp, NavigationTab } from '../../context/AppContext';
 import {
   LayoutDashboard,
   Bot,
+  Calculator,
   CalendarCheck,
   BookOpen,
-  User,
   Mic,
-  Download,
 } from 'lucide-react';
-import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 
 export const MobileBottomNav: React.FC = () => {
   const { activeTab, setActiveTab, setVoiceAssistantOpen } = useApp();
-  const { installApp, isStandalone, showIosHelp, setShowIosHelp } = useInstallPrompt();
 
   const navItems = [
     { id: 'dashboard' as NavigationTab, label: 'Home', icon: <LayoutDashboard size={20} /> },
-    { id: 'ai-tutor' as NavigationTab, label: 'AI Agents', icon: <Bot size={20} /> },
+    { id: 'ai-tutor' as NavigationTab, label: 'AI', icon: <Bot size={20} /> },
+    { id: 'math-solver' as NavigationTab, label: 'Math', icon: <Calculator size={20} /> },
     { id: 'study-plan' as NavigationTab, label: 'Study', icon: <CalendarCheck size={20} /> },
     { id: 'library' as NavigationTab, label: 'Library', icon: <BookOpen size={20} /> },
   ];
@@ -48,17 +46,6 @@ export const MobileBottomNav: React.FC = () => {
           );
         })}
 
-        {!isStandalone && (
-          <button
-            onClick={installApp}
-            className="min-w-0 flex flex-col items-center justify-center py-1 px-1 rounded-xl text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-            title="Install app"
-          >
-            <Download size={20} />
-            <span className="max-w-full truncate text-[9px] min-[380px]:text-[10px] mt-0.5 tracking-tight font-medium">Install</span>
-          </button>
-        )}
-
         {/* Floating Voice AI trigger button */}
         <button
           onClick={() => setVoiceAssistantOpen(true)}
@@ -68,29 +55,6 @@ export const MobileBottomNav: React.FC = () => {
           <Mic size={16} />
         </button>
       </div>
-      {showIosHelp && (
-        <div className="ios-install-panel p-4 space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-sm font-black">Install on iPhone</div>
-              <div className="mt-1 text-xs leading-relaxed text-slate-300">
-                Use Safari, tap Share, then tap Add to Home Screen.
-              </div>
-            </div>
-            <button
-              onClick={() => setShowIosHelp(false)}
-              className="rounded-lg bg-white/10 px-2 py-1 text-xs font-bold text-white"
-            >
-              Close
-            </button>
-          </div>
-          <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-bold text-slate-200">
-            <div className="rounded-xl bg-white/10 p-2">Safari</div>
-            <div className="rounded-xl bg-white/10 p-2">Share</div>
-            <div className="rounded-xl bg-white/10 p-2">Add</div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 };

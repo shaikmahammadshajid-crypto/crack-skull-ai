@@ -2,9 +2,11 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { CrackScoreGauge } from '../common/CrackScoreGauge';
 import { StreakFlame } from '../common/StreakFlame';
+import { HomeCommandAssistant } from './HomeCommandAssistant';
 import {
   Sparkles,
   Zap,
+  Calculator,
   CalendarCheck,
   Radar,
   FileText,
@@ -56,7 +58,7 @@ export const CommandDashboard: React.FC = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-bold font-heading text-gray-900 dark:text-white tracking-tight">
-              {getGreeting()}, {user.name.split(' ')[0]} 👋
+              {getGreeting()}, {user.name.split(' ')[0]}
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
@@ -89,10 +91,12 @@ export const CommandDashboard: React.FC = () => {
             }`}
           >
             <Zap size={14} className={user.isCrackModeActive ? 'fill-white' : 'text-orange-500'} />
-            <span>{user.isCrackModeActive ? '⚡ CRACK MODE: 3 DAYS' : 'ENABLE CRACK MODE'}</span>
+            <span>{user.isCrackModeActive ? 'CRACK MODE: 3 DAYS' : 'ENABLE CRACK MODE'}</span>
           </button>
         </div>
       </div>
+
+      <HomeCommandAssistant />
 
       {/* 2. Signature Feature: CRACK SCORE GAUGE */}
       <CrackScoreGauge crackScore={crackScore} onOpenCrackMode={toggleCrackMode} />
@@ -103,7 +107,7 @@ export const CommandDashboard: React.FC = () => {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-bold font-mono uppercase tracking-wider">
-                ⚡ SPRINT ACTIVE
+                SPRINT ACTIVE
               </span>
               <span className="text-xs font-bold text-orange-800 dark:text-orange-300 font-mono">
                 {primaryExam.name} ({primaryExam.code})
@@ -340,12 +344,18 @@ export const CommandDashboard: React.FC = () => {
         <div className="text-xs font-bold font-heading text-gray-400 uppercase tracking-wider">
           Quick Launch Command Center
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           <QuickActionCard
             title="Ask AI Tutor"
-            subtitle="7 Special Modes"
+            subtitle="13 Modes"
             icon={<Sparkles size={18} className="text-gray-700 dark:text-gray-300" />}
             onClick={() => setActiveTab('ai-tutor')}
+          />
+          <QuickActionCard
+            title="Math Solver"
+            subtitle="Step-by-step"
+            icon={<Calculator size={18} className="text-gray-700 dark:text-gray-300" />}
+            onClick={() => setActiveTab('math-solver')}
           />
           <QuickActionCard
             title="PDF Studio"

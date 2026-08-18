@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { aiService } from '../../services/aiService';
 import { AssistantLanguageCode, assistantLanguages, getAssistantLanguage } from '../../services/languageService';
+import { parseAppCommand } from '../../services/appCommandService';
 import { ChatMode } from '../../types';
 import {
   BookOpenCheck,
@@ -49,7 +50,12 @@ export const VoiceAssistantModal: React.FC = () => {
     setVoiceAssistantOpen,
     activeSubject,
     user,
+    theme,
+    toggleTheme,
     setActiveTab,
+    setGlobalSearchOpen,
+    toggleCrackMode,
+    regenerateStudyPlan,
   } = useApp();
 
   const [isListening, setIsListening] = useState(false);
@@ -184,8 +190,6 @@ export const VoiceAssistantModal: React.FC = () => {
       recognitionRef.current.stop();
     }
 
-    runLocalCommand(question);
-
     const studentTurn: VoiceTurn = {
       id: `student_${Date.now()}`,
       role: 'student',
@@ -195,6 +199,10 @@ export const VoiceAssistantModal: React.FC = () => {
     setTurns(prev => [...prev.slice(-5), studentTurn]);
     setTranscript('');
     setInterimTranscript('');
+
+    const localCommandHandled = await runLocalCommand(question);
+    if (localCommandHandled) return;
+
     setIsLoading(true);
 
     try {
@@ -240,20 +248,65 @@ export const VoiceAssistantModal: React.FC = () => {
     }
   };
 
-  const runLocalCommand = (question: string) => {
-    const clean = question.toLowerCase();
-    if (clean.includes('open quiz') || clean.includes('start quiz')) {
-      setActiveTab('quiz');
+  const runLocalCommand = async (question: string): Promise<boolean> => {
+    const parsed = parseAppCommand(question);
+    if (!parsed || parsed.action === 'answer') return false;
+
+    const say = (text: string) => {
+      setTurns(prev => [
+        ...prev.slice(-5),
+        {
+          id: `assistant_cmd_${Date.now()}`,
+          role: 'assistant',
+          text,
+        },
+      ]);
+      setIsSpeaking(true);
+      aiService.speakText(text, () => setIsSpeaking(false), language);
+    };
+
+    if (parsed.action === 'theme' && parsed.theme) {
+      if (theme !== parsed.theme) toggleTheme();
+      say(`Done. ${parsed.theme === 'dark' ? 'Dark' : 'Light'} theme is active.`);
+      return true;
     }
-    if (clean.includes('study plan') || clean.includes('today plan')) {
-      setActiveTab('study-plan');
+
+    if (parsed.action === 'search') {
+      setGlobalSearchOpen(true);
+      say(parsed.acknowledgement);
+      return true;
     }
-    if (clean.includes('flashcard')) {
-      setActiveTab('flashcards');
+
+    if (parsed.action === 'voice') {
+      say('Voice assistant is already open.');
+      return true;
     }
-    if (clean.includes('focus') || clean.includes('pomodoro')) {
-      setActiveTab('focus-timer');
+
+    if (parsed.action === 'crack-mode') {
+      toggleCrackMode();
+      say(parsed.acknowledgement);
+      return true;
     }
+
+    if (parsed.action === 'study-plan') {
+      setIsLoading(true);
+      try {
+        await regenerateStudyPlan();
+        setActiveTab('study-plan');
+        say('Done. I regenerated your study plan and opened the roadmap.');
+      } finally {
+        setIsLoading(false);
+      }
+      return true;
+    }
+
+    if (parsed.targetTab) {
+      setActiveTab(parsed.targetTab);
+      say(parsed.acknowledgement);
+      return true;
+    }
+
+    return false;
   };
 
   const stopVoicePlayback = () => {

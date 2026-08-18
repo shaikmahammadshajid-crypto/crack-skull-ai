@@ -12,6 +12,7 @@ import { LoginView } from './components/auth/LoginView';
 
 import { CommandDashboard } from './components/dashboard/CommandDashboard';
 import { AITutorView } from './components/ai/AITutorView';
+import { MathSolverView } from './components/math/MathSolverView';
 import { StudyPlanView } from './components/study/StudyPlanView';
 import { ExamRadarView } from './components/exam/ExamRadarView';
 import { DocumentStudioView } from './components/documents/DocumentStudioView';
@@ -39,6 +40,8 @@ const MainLayout: React.FC = () => {
         return <CommandDashboard />;
       case 'ai-tutor':
         return <AITutorView />;
+      case 'math-solver':
+        return <MathSolverView />;
       case 'study-plan':
         return <StudyPlanView />;
       case 'exam-radar':
@@ -98,8 +101,9 @@ const MainLayout: React.FC = () => {
 
               <div className="space-y-1 overflow-y-auto max-h-[70vh] pr-1">
                 {[
-                  { id: 'dashboard', label: 'Command Center' },
+                  { id: 'dashboard', label: 'Home Assistant' },
                   { id: 'ai-tutor', label: 'Multilingual AI Agents' },
+                  { id: 'math-solver', label: 'Math Solver' },
                   { id: 'study-plan', label: 'Adaptive Study Plan' },
                   { id: 'exam-radar', label: 'Exam Radar (PYQ)' },
                   { id: 'document-ai', label: 'PDF Learning Studio' },

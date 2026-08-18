@@ -16,6 +16,7 @@
     max-width: 100vw;
     overflow-x: hidden;
     overscroll-behavior-x: none;
+    color-scheme: light;
   }
 
   html,
@@ -40,15 +41,34 @@
   .dark body {
     background-color: #0F1117;
     color: #F3F4F6;
+    color-scheme: dark;
   }
 
   h1, h2, h3, h4, .font-heading {
     font-family: var(--font-heading);
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
   }
 
   code, pre, .font-mono {
     font-family: var(--font-mono);
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button svg,
+  a svg {
+    flex-shrink: 0;
+  }
+
+  :focus-visible {
+    outline: 2px solid #06B6D4;
+    outline-offset: 2px;
   }
 }
 

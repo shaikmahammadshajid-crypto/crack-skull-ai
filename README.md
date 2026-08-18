@@ -20,7 +20,7 @@ An intelligent, production-ready web application designed to help students prepa
 
 # 📌 Project Overview
 
-**CrackSkull AI** is an advanced academic productivity and exam-preparation platform built for college and university students. It combines a multilingual AI tutor, voice assistant, AI study planner, previous-year-question radar, PDF learning studio, mock quiz generator, viva simulator, flashcards, focus timer, exam calendar, academic analytics, and student profile tracking into one full-stack application.
+**CrackSkull AI** is an advanced academic productivity and exam-preparation platform built for college and university students. It combines a home command assistant, multilingual AI tutor, dedicated math solver, voice assistant, AI study planner, previous-year-question radar, PDF learning studio, mock quiz generator, viva simulator, flashcards, focus timer, exam calendar, academic analytics, and student profile tracking into one full-stack application.
 
 The assistant supports multiple specialized AI agents and multilingual learning workflows, making it useful for students who want explanations, exam answers, coding help, revision notes, interview preparation, or spoken guidance in their preferred language.
 
@@ -28,9 +28,11 @@ The assistant supports multiple specialized AI agents and multilingual learning 
 
 # ✨ Key Features
 
-- 🌐 **Multilingual AI Tutor**: Supports Auto Detect, English, Hindi, Telugu, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Urdu, Spanish, French, and Arabic.
-- 🎙️ **Multilingual Voice Assistant**: Browser speech recognition and text-to-speech for asking questions by voice and listening to AI responses.
-- 🤖 **12 Specialized AI Agents**: Tutor, Exam Mode, Doubt Solver, PYQ Agent, Study Planner, Beginner Mode, Coding Mentor, Document Q&A, Viva Examiner, Revision Coach, Interview Agent, and Study Wellness Agent.
+- 🏠 **Home Command Assistant**: Opens sections, changes theme, starts voice, regenerates plans, and answers academic requests from the home page.
+- 🌐 **Multilingual AI Tutor**: Supports Auto Detect, English, Hindi, Telugu, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Urdu, Spanish, French, Arabic, German, Portuguese, Indonesian, Chinese, Japanese, and Korean.
+- 🎙️ **Multilingual Voice Assistant**: Browser speech recognition and text-to-speech for asking questions by voice, controlling app navigation, and listening to AI responses.
+- 🤖 **13 Specialized AI Modes**: Tutor, Math Solver, Exam Mode, Doubt Solver, PYQ Agent, Study Planner, Beginner Mode, Coding Mentor, Document Q&A, Viva Examiner, Revision Coach, Interview Agent, and Study Wellness Agent.
+- 🧮 **Dedicated Math Solver**: Solves algebra, calculus, matrices, probability, statistics, differential equations, proofs, and word problems with step-by-step explanations and voice output.
 - 📚 **AI Tutor Copilot**: Step-by-step concept explanations, exam-focused answers, diagrams, tables, examples, and follow-up study actions.
 - 🧪 **AI Quiz & Mock Test Generator**: Creates subject-wise quizzes with explanations, marks, difficulty levels, and performance tracking.
 - 📡 **Exam Radar / PYQ Analyzer**: Identifies high-priority topics, recurring question patterns, marks weightage, and likely exam questions.
@@ -49,6 +51,7 @@ The assistant supports multiple specialized AI agents and multilingual learning 
 | Agent | Purpose |
 |-------|---------|
 | Tutor Agent | Deep conceptual explanations with examples and structured breakdowns |
+| Math Solver Agent | High-accuracy algebra, calculus, matrices, probability, statistics, and proof-style solutions |
 | Exam Mode Agent | High-scoring 2-mark, 5-mark, and 10-mark answer formatting |
 | Doubt Solver Agent | Finds the exact confusion and resolves it with minimal examples |
 | PYQ Agent | Predicts previous-year-question patterns and model answer skeletons |
@@ -114,13 +117,15 @@ crack-skull-ai/
     ├── components/
     │   ├── ai/
     │   │   └── AITutorView.tsx       # Multilingual AI agents chat interface
+    │   ├── math/
+    │   │   └── MathSolverView.tsx    # Dedicated step-by-step math solver
     │   ├── common/
     │   │   ├── VoiceAssistantModal.tsx
     │   │   ├── Sidebar.tsx
     │   │   ├── Header.tsx
     │   │   ├── GlobalSearchModal.tsx
     │   │   └── SettingsModal.tsx
-    │   ├── dashboard/                # Command dashboard and Crack Score overview
+    │   ├── dashboard/                # Home assistant, dashboard, and Crack Score overview
     │   ├── study/                    # Adaptive study plan and Crack Mode workflow
     │   ├── exam/                     # Exam Radar and PYQ analysis
     │   ├── documents/                # PDF Learning Studio
@@ -139,6 +144,7 @@ crack-skull-ai/
     │   └── AppContext.tsx            # Global app state and actions
     │
     ├── services/
+    │   ├── appCommandService.ts      # Deterministic app command routing
     │   ├── aiService.ts              # Frontend AI API client and TTS helper
     │   ├── languageService.ts        # Multilingual assistant language metadata
     │   ├── storageService.ts         # Local persistence and score calculation
@@ -250,9 +256,10 @@ Generate Quiz       Track Progress
 
 # 📷 Key Application Views
 
-- 🏠 **Command Center**: Crack Score, progress overview, tasks, study analytics, and shortcuts.
-- 🤖 **AI Agents Copilot**: Multilingual chat interface with 12 academic agents.
-- 🎙️ **Voice Assistant**: Speech-based academic assistant with multilingual recognition and voice output.
+- 🏠 **Home Assistant**: App command center, Crack Score, progress overview, tasks, study analytics, and shortcuts.
+- 🤖 **AI Agents Copilot**: Multilingual chat interface with 13 academic modes.
+- 🧮 **Math Solver**: Dedicated workspace for advanced math solutions, explanations, and voice playback.
+- 🎙️ **Voice Assistant**: Speech-based academic assistant with multilingual recognition, app commands, and voice output.
 - 📅 **Adaptive Study Plan**: Daily missions, weekly roadmap, weak-topic targeting, and Crack Mode.
 - 📡 **Exam Radar**: Previous-year-question topic prediction and marks-weightage strategy.
 - 📄 **PDF Learning Studio**: Document summaries, formulas, concept extraction, and predicted questions.

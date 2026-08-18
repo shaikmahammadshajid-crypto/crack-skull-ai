@@ -339,9 +339,9 @@ What topic would you like to master today?`,
   const currentLanguage = getAssistantLanguage(language);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-6xl mx-auto rounded-3xl bg-[#0E1322] border border-slate-800 shadow-2xl overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-6xl mx-auto rounded-2xl bg-white dark:bg-[#161922] border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
       {/* 1. Top Bar: Modes & Chat Tools */}
-      <div className="p-3.5 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between gap-3 flex-wrap">
+      <div className="p-3.5 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-[#121722]/95 flex items-center justify-between gap-3 flex-wrap">
         {/* Mode Selector */}
         <div className="flex flex-wrap items-center gap-1.5 overflow-x-hidden py-0.5">
           <ModeTab
@@ -426,8 +426,8 @@ What topic would you like to master today?`,
 
         {/* Right Tools */}
         <div className="flex items-center gap-1.5">
-          <label className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs">
-            <Languages size={14} className="text-cyan-300" />
+          <label className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 text-xs">
+            <Languages size={14} className="text-cyan-600 dark:text-cyan-300" />
             <select
               value={language}
               onChange={e => setLanguage(e.target.value as AssistantLanguageCode)}
@@ -435,7 +435,7 @@ What topic would you like to master today?`,
               title="Assistant language"
             >
               {assistantLanguages.map(item => (
-                <option key={item.code} value={item.code} className="bg-slate-950 text-slate-100">
+                <option key={item.code} value={item.code} className="bg-white dark:bg-slate-950 text-gray-950 dark:text-slate-100">
                   {item.label} - {item.nativeLabel}
                 </option>
               ))}
@@ -443,7 +443,7 @@ What topic would you like to master today?`,
           </label>
           <button
             onClick={exportChat}
-            className="p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white text-xs flex items-center gap-1 transition-colors"
+            className="p-1.5 rounded-xl bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:text-gray-950 dark:hover:text-white text-xs flex items-center gap-1 transition-colors"
             title="Export Conversation"
           >
             <Download size={14} />
@@ -451,7 +451,7 @@ What topic would you like to master today?`,
           </button>
           <button
             onClick={() => setMessages([messages[0]])}
-            className="p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 text-xs transition-colors"
+            className="p-1.5 rounded-xl bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:text-rose-500 text-xs transition-colors"
             title="Clear Chat"
           >
             <Trash2 size={14} />
@@ -469,14 +469,18 @@ What topic would you like to master today?`,
             <div
               className={`max-w-3xl rounded-3xl p-4 sm:p-5 text-xs sm:text-sm leading-relaxed shadow-lg ${
                 msg.role === 'user'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none'
-                  : 'bg-slate-900/90 border border-slate-800 text-slate-100 rounded-bl-none'
+                  ? 'bg-black text-white dark:bg-white dark:text-black rounded-br-none'
+                  : 'bg-gray-50 dark:bg-[#10141E] border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-slate-100 rounded-bl-none'
               }`}
             >
               {/* Message Role & Mode Tag */}
-              <div className="flex items-center justify-between gap-4 mb-2 pb-1.5 border-b border-white/10 text-[11px] font-mono text-slate-400">
-                <span className="font-bold flex items-center gap-1 text-purple-300">
-                  {msg.role === 'user' ? 'You' : '💀 Crack Skull AI'}
+              <div className={`flex items-center justify-between gap-4 mb-2 pb-1.5 border-b text-[11px] font-mono ${
+                msg.role === 'user'
+                  ? 'border-white/10 text-white/70 dark:border-black/10 dark:text-black/60'
+                  : 'border-gray-200 dark:border-gray-800 text-gray-500 dark:text-slate-400'
+              }`}>
+                <span className="font-bold flex items-center gap-1">
+                  {msg.role === 'user' ? 'You' : 'CrackSkull AI'}
                 </span>
                 <span>{msg.timestamp}</span>
               </div>
@@ -486,10 +490,10 @@ What topic would you like to master today?`,
 
               {/* AI Message Action Buttons */}
               {msg.role === 'assistant' && (
-                <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center gap-1.5 flex-wrap text-xs">
+                <div className="mt-3 pt-2.5 border-t border-gray-200 dark:border-gray-800 flex items-center gap-1.5 flex-wrap text-xs">
                   <button
                     onClick={() => copyText(msg.id, msg.content)}
-                    className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-850 text-slate-300 hover:text-white flex items-center gap-1 transition-colors"
+                    className="p-1.5 rounded-lg bg-white dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-slate-300 hover:text-gray-950 dark:hover:text-white flex items-center gap-1 transition-colors"
                     title="Copy Answer"
                   >
                     {copiedId === msg.id ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
@@ -498,16 +502,16 @@ What topic would you like to master today?`,
 
                   <button
                     onClick={() => speakMessage(msg.id, msg.content)}
-                    className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-850 text-slate-300 hover:text-purple-300 flex items-center gap-1 transition-colors"
+                    className="p-1.5 rounded-lg bg-white dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300 flex items-center gap-1 transition-colors"
                     title="Read Aloud"
                   >
-                    <Volume2 size={13} className={speakingId === msg.id ? 'text-purple-400 animate-pulse' : ''} />
+                    <Volume2 size={13} className={speakingId === msg.id ? 'text-cyan-500 animate-pulse' : ''} />
                     <span>{speakingId === msg.id ? 'Stop Voice' : 'Listen'}</span>
                   </button>
 
                   <button
                     onClick={() => handleCreateFlashcard(msg.content)}
-                    className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-amber-950/60 text-slate-300 hover:text-amber-300 flex items-center gap-1 transition-colors"
+                    className="p-1.5 rounded-lg bg-white dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-300 flex items-center gap-1 transition-colors"
                     title="Save to Flashcards"
                   >
                     <Layers size={13} />
@@ -516,7 +520,7 @@ What topic would you like to master today?`,
 
                   <button
                     onClick={() => handleGenerateQuizFromMessage(msg.content)}
-                    className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-pink-950/60 text-slate-300 hover:text-pink-300 flex items-center gap-1 transition-colors"
+                    className="p-1.5 rounded-lg bg-white dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-slate-300 hover:text-pink-600 dark:hover:text-pink-300 flex items-center gap-1 transition-colors"
                     title="Quiz on this topic"
                   >
                     <HelpCircle size={13} />
@@ -529,7 +533,7 @@ What topic would you like to master today?`,
         ))}
 
         {isLoading && (
-          <div className="flex items-center gap-2 p-4 rounded-2xl bg-slate-900/60 border border-slate-800 w-fit text-xs text-purple-400 animate-pulse">
+          <div className="flex items-center gap-2 p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-900/50 w-fit text-xs text-cyan-700 dark:text-cyan-300 animate-pulse">
             <Sparkles size={16} />
             <span>Formulating {currentLanguage.label.toLowerCase()} response with the selected AI agent...</span>
           </div>
@@ -539,15 +543,15 @@ What topic would you like to master today?`,
 
       {/* 3. Prompt Suggestions Pill Bar */}
       {messages.length <= 2 && (
-        <div className="px-4 py-2 border-t border-slate-800/60 bg-slate-950/40 flex flex-wrap items-center gap-2 overflow-x-hidden">
-          <span className="text-[10px] font-bold text-slate-500 uppercase whitespace-nowrap">
+        <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#10141E] flex flex-wrap items-center gap-2 overflow-x-hidden">
+          <span className="text-[10px] font-bold text-gray-500 dark:text-slate-500 uppercase whitespace-nowrap">
             Suggested:
           </span>
           {promptSuggestions.map((s, idx) => (
             <button
               key={idx}
               onClick={() => handleSend(s)}
-              className="text-[11px] px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-purple-500/40 whitespace-nowrap transition-colors"
+              className="text-[11px] px-2.5 py-1 rounded-full bg-white dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-slate-300 hover:text-gray-950 dark:hover:text-white hover:border-cyan-500/40 whitespace-nowrap transition-colors"
             >
               {s}
             </button>
@@ -556,11 +560,11 @@ What topic would you like to master today?`,
       )}
 
       {/* 4. Bottom Input Bar */}
-      <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950/90">
+      <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-[#121722]">
         {(attachments.length > 0 || attachmentError) && (
           <div className="mb-3 space-y-2">
             {attachmentError && (
-              <div className="rounded-xl border border-rose-500/30 bg-rose-950/40 px-3 py-2 text-xs text-rose-200">
+              <div className="rounded-xl border border-rose-300 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-xs text-rose-700 dark:text-rose-200">
                 {attachmentError}
               </div>
             )}
@@ -569,25 +573,25 @@ What topic would you like to master today?`,
                 {attachments.map(file => (
                   <div
                     key={file.id}
-                    className="flex max-w-full items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-2.5 py-2 text-xs text-slate-200"
+                    className="flex max-w-full items-center gap-2 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1A1D27] px-2.5 py-2 text-xs text-gray-700 dark:text-slate-200"
                   >
                     {file.previewUrl ? (
                       <img src={file.previewUrl} alt="" className="h-8 w-8 rounded-lg object-cover" />
                     ) : file.name.toLowerCase().endsWith('.pptx') ? (
-                      <Presentation size={18} className="text-orange-300" />
+                      <Presentation size={18} className="text-orange-500 dark:text-orange-300" />
                     ) : (
-                      <FileUp size={18} className="text-purple-300" />
+                      <FileUp size={18} className="text-cyan-600 dark:text-cyan-300" />
                     )}
                     <div className="min-w-0">
                       <div className="max-w-[180px] truncate font-bold">{file.name}</div>
-                      <div className={`text-[10px] ${file.status === 'error' ? 'text-rose-300' : 'text-slate-500'}`}>
+                      <div className={`text-[10px] ${file.status === 'error' ? 'text-rose-500 dark:text-rose-300' : 'text-gray-500 dark:text-slate-500'}`}>
                         {file.status === 'processing' ? 'Reading...' : file.status === 'error' ? file.error : file.sizeLabel}
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeAttachment(file.id)}
-                      className="rounded-lg p-1 text-slate-500 hover:bg-slate-800 hover:text-white"
+                      className="rounded-lg p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-950 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-white"
                       title="Remove attachment"
                     >
                       <X size={14} />
@@ -616,7 +620,7 @@ What topic would you like to master today?`,
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-3 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-purple-500/50 transition-colors"
+            className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1D27] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-slate-300 hover:text-gray-950 dark:hover:text-white hover:border-cyan-500/50 transition-colors"
             title="Upload photo, PDF, or PPTX"
           >
             <Paperclip size={18} />
@@ -626,12 +630,12 @@ What topic would you like to master today?`,
             placeholder={mode === 'math' ? `Type a math problem or upload a question photo/PDF/PPTX...` : `Ask in ${mode.toUpperCase()} mode using ${currentLanguage.label}...`}
             value={inputMessage}
             onChange={e => setInputMessage(e.target.value)}
-            className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 shadow-inner"
+            className="flex-1 bg-gray-50 dark:bg-[#10141E] border border-gray-200 dark:border-gray-800 rounded-2xl px-4 py-3 text-xs sm:text-sm text-gray-950 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 shadow-inner"
           />
           <button
             type="submit"
             disabled={isLoading || (!inputMessage.trim() && !attachments.some(file => file.status === 'ready')) || attachments.some(file => file.status === 'processing')}
-            className="p-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 transition-all shadow-md shadow-purple-600/30 flex items-center justify-center"
+            className="p-3 rounded-2xl bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 disabled:opacity-40 transition-all shadow-sm flex items-center justify-center"
           >
             <Send size={18} />
           </button>
@@ -660,8 +664,8 @@ const ModeTab: React.FC<{
     onClick={onClick}
     className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all ${
       active
-        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 font-bold'
-        : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+        ? 'bg-black text-white dark:bg-white dark:text-black shadow-sm font-bold'
+        : 'bg-gray-50 dark:bg-[#1A1D27] text-gray-600 dark:text-slate-400 hover:text-gray-950 dark:hover:text-slate-200 border border-gray-200 dark:border-gray-800'
     }`}
   >
     {icon}
@@ -669,7 +673,7 @@ const ModeTab: React.FC<{
   </button>
 );
 
-const MarkdownAnswer: React.FC<{ content: string }> = ({ content }) => {
+export const MarkdownAnswer: React.FC<{ content: string }> = ({ content }) => {
   const rendered = useMemo(() => renderMarkdownBlocks(content), [content]);
   return <div className="ai-markdown font-sans">{rendered}</div>;
 };

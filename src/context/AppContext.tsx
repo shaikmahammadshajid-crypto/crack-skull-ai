@@ -22,6 +22,7 @@ import { aiService } from '../services/aiService';
 export type NavigationTab =
   | 'dashboard'
   | 'ai-tutor'
+  | 'math-solver'
   | 'study-plan'
   | 'exam-radar'
   | 'document-ai'

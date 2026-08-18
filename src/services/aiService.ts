@@ -182,18 +182,16 @@ export const aiService = {
     // Clean markdown before speaking
     const cleanText = sanitizeTextForSpeech(text).slice(0, 900);
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 1.05;
-    utterance.pitch = 1.0;
     const preferredLanguage = getAssistantLanguage(language);
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = preferredLanguage.speechLang.startsWith('en') ? 1.02 : 0.94;
+    utterance.pitch = 1.0;
+    utterance.volume = 1;
     utterance.lang = preferredLanguage.speechLang;
 
     // Pick a natural voice matching the selected language if available.
     const voices = window.speechSynthesis.getVoices();
-    const exactVoice = voices.find(v => v.lang === preferredLanguage.speechLang);
-    const familyVoice = voices.find(v => v.lang.split('-')[0] === preferredLanguage.speechLang.split('-')[0]);
-    const englishFallback = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha')));
-    const selectedVoice = exactVoice || familyVoice || englishFallback;
+    const selectedVoice = selectSpeechVoice(voices, preferredLanguage.speechLang);
     if (selectedVoice) {
       utterance.voice = selectedVoice;
     }
@@ -231,6 +229,24 @@ function sanitizeTextForSpeech(text: string): string {
     .replace(/-{3,}/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function selectSpeechVoice(voices: SpeechSynthesisVoice[], speechLang: string): SpeechSynthesisVoice | undefined {
+  const langFamily = speechLang.split('-')[0];
+  const qualityRank = (voice: SpeechSynthesisVoice) => {
+    const name = voice.name.toLowerCase();
+    let score = 0;
+    if (voice.lang === speechLang) score += 50;
+    if (voice.lang.split('-')[0] === langFamily) score += 30;
+    if (/natural|neural|premium|enhanced|google|microsoft|apple|samantha|lekha|veena|rishi/i.test(name)) score += 12;
+    if (voice.localService) score += 3;
+    if (/compact|basic|default/i.test(name)) score -= 5;
+    return score;
+  };
+
+  return voices
+    .filter(voice => voice.lang === speechLang || voice.lang.split('-')[0] === langFamily || voice.lang.startsWith('en'))
+    .sort((a, b) => qualityRank(b) - qualityRank(a))[0];
 }
 
 function buildClientFallbackReply(message: string, mode: ChatMode, subject = 'General academics'): string {
@@ -314,7 +330,7 @@ ${quadratic.steps}
 **Answer: ${quadratic.answer}**`;
   }
 
-  const definiteIntegral = message.match(/integrat(?:e|ion|al)?\s+(?:of\s+)?x\^?(\d+)\s+from\s+(-?\d+(?:\.\d+)?)\s+to\s+(-?\d+(?:\.\d+)?)/i);
+  const definiteIntegral = message.match(/(?:integral|integrate|integration)\s+(?:of\s+)?x(?:\^|\*\*)?(\d+)\s+from\s+(-?\d+(?:\.\d+)?)\s+to\s+(-?\d+(?:\.\d+)?)/i);
   if (definiteIntegral) {
     const power = Number(definiteIntegral[1]);
     const lower = Number(definiteIntegral[2]);
