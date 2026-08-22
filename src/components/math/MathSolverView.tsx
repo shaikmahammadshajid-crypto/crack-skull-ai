@@ -58,37 +58,37 @@ const exampleProblemsByTopic: Record<MathTopicBranch, string[]> = {
     'Solve x^2 - 5x + 6 = 0 and verify the roots.',
     'Evaluate \\(\\int_0^2 x^3\\,dx\\) with all steps.',
     'Find the derivative of \\(3x^4 - 5x^2 + 7x - 9\\).',
-    'Solve a 3x3 matrix inverse problem and verify by multiplication.',
+    'Find \\(A^{-1}\\) for \\(A=\\begin{bmatrix}1&2&0\\\\0&1&3\\\\2&0&1\\end{bmatrix}\\) and verify \\(AA^{-1}=I\\).',
   ],
   'Engineering Mathematics': [
     'Solve \\(y\'\' - 4y\' + 4y = e^{2x}\\) using the complementary function and particular integral.',
     'Find the Laplace transform of \\(t^2 e^{-3t}\\) and state the ROC.',
-    'Use eigenvalues to diagonalize a 3x3 matrix and verify \\(A = PDP^{-1}\\).',
-    'Solve the heat equation on a rod with homogeneous boundary conditions using separation of variables.',
+    'Diagonalize \\(A=\\begin{bmatrix}2&0&0\\\\0&3&4\\\\0&4&9\\end{bmatrix}\\), if possible, and verify \\(A=PDP^{-1}\\).',
+    'Solve \\(u_t=4u_{xx}\\), \\(0<x<\\pi\\), \\(u(0,t)=u(\\pi,t)=0\\), \\(u(x,0)=3\\sin x+2\\sin 2x\\).',
   ],
   'Electrical Engineering': [
     'For an RLC series circuit with R = 10 ohm, L = 0.5 H, C = 100 microfarad, classify damping and find natural frequency.',
     'Find the RMS value and average power for \\(v(t)=230\\sqrt{2}\\sin(100\\pi t)\\) across a 20 ohm resistor.',
-    'Solve a two-mesh circuit using matrix equations and verify KVL.',
-    'Compute the Thevenin equivalent of a DC network and verify load current.',
+    'Solve mesh currents for two meshes with \\(R_1=4\\Omega\\), shared \\(R_3=2\\Omega\\), \\(R_2=6\\Omega\\), sources \\(12V\\) in mesh 1 and \\(6V\\) opposing in mesh 2. Verify KVL.',
+    'Find the Thevenin equivalent seen by \\(R_L\\) for a 12 V source with \\(R_1=4\\Omega\\) in series and \\(R_2=8\\Omega\\) to ground at the output node. Then find current for \\(R_L=8\\Omega\\).',
   ],
   'Mechanical Engineering': [
     'A damped spring-mass system has m = 2 kg, c = 8 N s/m, k = 18 N/m. Classify damping and solve free vibration response.',
     'Derive the torsional vibration natural frequency for a shaft-disc system and check units.',
-    'Calculate centroid and second moment of area for a T-section symbolically.',
+    'Calculate centroid and second moment of area about the centroidal x-axis for a T-section with flange 120 mm x 20 mm and web 20 mm x 100 mm centered below it.',
     'Solve a transient conduction problem using lumped capacitance and verify Biot number assumption.',
   ],
   'Civil Engineering': [
     'Find reactions, shear force, and bending moment for a simply supported beam with a central point load P.',
-    'Use slope-deflection equations for a fixed-end beam with UDL and verify joint equilibrium.',
-    'Calculate principal stresses using Mohr circle for \\(\\sigma_x, \\sigma_y, \\tau_{xy}\\).',
-    'Solve a consolidation settlement problem and check units throughout.',
+    'Use slope-deflection equations for a fixed-end beam AB of length 6 m carrying UDL \\(w=10\\,kN/m\\); find fixed-end moments and verify joint equilibrium.',
+    'Calculate principal stresses and maximum shear stress for \\(\\sigma_x=80\\,MPa\\), \\(\\sigma_y=20\\,MPa\\), \\(\\tau_{xy}=30\\,MPa\\).',
+    'Solve consolidation settlement for clay thickness 4 m, \\(e_0=0.9\\), \\(C_c=0.25\\), \\(\\sigma_0=100\\,kPa\\), \\(\\Delta\\sigma=50\\,kPa\\).',
   ],
   'Control Systems': [
     'For \\(G(s)=\\frac{10}{s(s+2)(s+5)}\\), use Routh-Hurwitz to determine closed-loop stability.',
-    'Find damping ratio, natural frequency, peak overshoot, and settling time for a second-order system.',
+    'For \\(T(s)=\\frac{25}{s^2+6s+25}\\), find damping ratio, natural frequency, peak overshoot, and 2% settling time.',
     'Sketch the root locus of \\(G(s)H(s)=\\frac{K}{s(s+4)(s+6)}\\) and identify breakaway points.',
-    'Derive steady-state error constants \\(K_p\\), \\(K_v\\), and \\(K_a\\) for a unity-feedback system.',
+    'For unity feedback with \\(G(s)=\\frac{20}{s(s+5)}\\), find \\(K_p\\), \\(K_v\\), \\(K_a\\), and steady-state errors for step, ramp, and parabolic inputs.',
   ],
   'Signals & Systems': [
     'Find the Fourier series coefficients of a half-wave rectified sine wave.',
@@ -98,9 +98,9 @@ const exampleProblemsByTopic: Record<MathTopicBranch, string[]> = {
   ],
   'Numerical Methods': [
     'Use Newton-Raphson to solve \\(x^3 - x - 2 = 0\\) with tolerance \\(10^{-4}\\), showing iterations.',
-    'Apply Gauss-Seidel to a 3x3 linear system and check convergence condition.',
+    'Apply Gauss-Seidel to solve \\(4x+y+z=7\\), \\(x+5y+2z=-8\\), \\(2x+y+6z=6\\) for three iterations from \\((0,0,0)\\), and check convergence.',
     'Use RK4 to solve \\(y\'=x+y\\), \\(y(0)=1\\), with step size h = 0.1 for two steps.',
-    'Interpolate using Newton divided differences for four data points and verify with substitution.',
+    'Use Newton divided differences to interpolate \\((0,1),(1,3),(2,7),(3,13)\\), then estimate \\(f(1.5)\\).',
   ],
   'Complex Variables': [
     'Find the residue of \\(f(z)=\\frac{e^z}{(z-1)^2(z+2)}\\) at each singularity.',
@@ -114,7 +114,7 @@ const fallbackErrorMessage = `# Live Solver Unavailable
 
 The Math Solver could not reach a live AI provider, so I cannot honestly generate or verify a full worked solution right now.
 
-Check the server connection or configure a live provider key such as \`GEMINI_API_KEY\`, \`NVIDIA_API_KEY\`, \`NVIDIA_INFERENCE_API_KEY\`, or \`Vibe_Coder\`, then try again.`;
+Check the server connection or configure \`GEMINI_API_KEY\`, then try again.`;
 
 const latexHint = 'Use LaTeX when helpful: inline \\(x^2\\), block \\[\\int_0^1 x^2\\,dx\\], matrices \\(\\begin{bmatrix}1&2\\\\3&4\\end{bmatrix}\\).';
 
@@ -137,6 +137,36 @@ const depthLabels: Record<ExplanationDepth, string> = {
   quick: 'Final + Key Steps',
 };
 
+const extractFinalAnswer = (content: string): string => {
+  const headingMatch = content.match(/(?:^|\n)#{2,4}\s*Final Answer\s*\n([\s\S]*?)(?=\n#{2,4}\s|\n---|\s*$)/i);
+  if (headingMatch?.[1]?.trim()) return headingMatch[1].trim();
+
+  const boxedAnswer = extractBalancedBoxedAnswer(content);
+  if (boxedAnswer) return boxedAnswer;
+
+  const finalLine = content.split('\n').find(line => /final answer|answer\s*:/i.test(line));
+  return finalLine?.trim() || '';
+};
+
+const extractBalancedBoxedAnswer = (content: string): string => {
+  const boxedStart = content.indexOf('\\boxed{');
+  if (boxedStart === -1) return '';
+
+  let depth = 0;
+  for (let index = boxedStart + '\\boxed'.length; index < content.length; index += 1) {
+    const character = content[index];
+    if (character === '{' && content[index - 1] !== '\\') depth += 1;
+    if (character === '}' && content[index - 1] !== '\\') {
+      depth -= 1;
+      if (depth === 0) {
+        return content.slice(boxedStart, index + 1).trim();
+      }
+    }
+  }
+
+  return '';
+};
+
 export const MathSolverView: React.FC = () => {
   const { activeSubject, user } = useApp();
   const [problem, setProblem] = useState('');
@@ -153,6 +183,8 @@ export const MathSolverView: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const selectedLanguage = getAssistantLanguage(language);
   const selectedExamples = exampleProblemsByTopic[topicBranch];
+  const finalAnswer = solution ? extractFinalAnswer(solution) : '';
+  const solutionPath = ['Problem', 'Given', 'Method', 'Steps', 'Final'];
 
   const helperPrompt = useMemo(() => {
     if (depth === 'deep') {
@@ -188,7 +220,7 @@ Answer-style control:
 ${helperPrompt}
 
 Rendering rules:
-- Use Markdown headings exactly as requested by the Math Solver system prompt.
+- Use these Markdown headings: ### Problem, ### Given, ### Method, ### Step-by-step Solution, ### Verification, ### Final Answer.
 - Use LaTeX for every mathematical expression.
 - Use inline math with \\( ... \\) and display math with \\[ ... \\] or $$ ... $$.
 - Do not put equations in code blocks unless the student asks for code.
@@ -275,120 +307,79 @@ Rendering rules:
   };
 
   return (
-    <div className="view-stack space-y-5 lg:pb-8">
-      <section className="view-hero p-5 sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="view-kicker">
-              <Sigma size={14} />
-              Dedicated Math Solver
-            </div>
-            <h1 className="view-title mt-3 text-2xl sm:text-3xl">
-              Solve high-end math with clear steps
-            </h1>
-            <p className="view-copy mt-2 max-w-2xl text-sm">
-              Algebra, calculus, matrices, probability, statistics, differential equations, proofs, numerical methods, and exam word problems.
-            </p>
+    <div className="view-stack space-y-4 lg:pb-8">
+      <section className="view-hero flex flex-col justify-between gap-3 p-4 sm:p-5 md:flex-row md:items-center">
+        <div className="min-w-0">
+          <div className="view-kicker">
+            <Sigma size={13} />
+            Problem Workspace
           </div>
-
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:w-[34rem]">
-            <label className="surface-muted px-3 py-2">
-              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
-                <Sigma size={12} />
-                Topic / Branch
-              </span>
-              <select
-                value={topicBranch}
-                onChange={event => setTopicBranch(event.target.value as MathTopicBranch)}
-                className="mt-1 w-full bg-transparent text-xs font-black text-[var(--app-text)] outline-none"
-              >
-                {topicBranches.map(item => (
-                  <option key={item} value={item} className="bg-white text-gray-950 dark:bg-slate-950 dark:text-white">
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="surface-muted px-3 py-2">
-              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
-                <Calculator size={12} />
-                Difficulty
-              </span>
-              <select
-                value={difficulty}
-                onChange={event => setDifficulty(event.target.value as MathDifficulty)}
-                className="mt-1 w-full bg-transparent text-xs font-black text-[var(--app-text)] outline-none"
-              >
-                {mathDifficulties.map(item => (
-                  <option key={item} value={item} className="bg-white text-gray-950 dark:bg-slate-950 dark:text-white">
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="surface-muted px-3 py-2">
-              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
-                <Languages size={12} />
-                Language
-              </span>
-              <select
-                value={language}
-                onChange={event => setLanguage(event.target.value as AssistantLanguageCode)}
-                className="mt-1 w-full bg-transparent text-xs font-black text-[var(--app-text)] outline-none"
-              >
-                {assistantLanguages.map(item => (
-                  <option key={item.code} value={item.code} className="bg-white text-gray-950 dark:bg-slate-950 dark:text-white">
-                    {item.label} - {item.nativeLabel}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="surface-muted px-3 py-2">
-              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
-                <Lightbulb size={12} />
-                Answer Style
-              </span>
-              <select
-                value={depth}
-                onChange={event => setDepth(event.target.value as ExplanationDepth)}
-                className="mt-1 w-full bg-transparent text-xs font-black text-[var(--app-text)] outline-none"
-              >
-                {Object.entries(depthLabels).map(([value, label]) => (
-                  <option key={value} value={value} className="bg-white text-gray-950 dark:bg-slate-950 dark:text-white">
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+          <h1 className="view-title mt-2 text-xl sm:text-2xl">Math Solver</h1>
+          <p className="view-copy mt-1 max-w-2xl text-xs sm:text-sm">
+            Enter a typed problem or upload a question image. Solutions render formulas through KaTeX and keep copy, voice, examples, language, and answer-style controls available.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+          <span className="status-pill">{topicBranch}</span>
+          <span className="status-pill">{difficulty}</span>
+          <span className="status-pill">{depthLabels[depth]}</span>
         </div>
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <section className="surface-card p-4 sm:p-5">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.15fr)]">
+        <section className="workspace-panel overflow-hidden">
+          <div className="workspace-header p-4">
+            <div className="flex items-center gap-2.5">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
+                <Calculator size={18} />
+              </div>
+              <div>
+                <h2 className="font-heading text-sm font-black text-[var(--app-text)]">Problem Entry</h2>
+                <p className="text-[11px] text-[var(--app-text-muted)]">Controls are sent with the AI solve request.</p>
+              </div>
+            </div>
+          </div>
+
           <form
             onSubmit={event => {
               event.preventDefault();
               void solveProblem();
             }}
-            className="space-y-4"
+            className="space-y-4 p-4 sm:p-5"
           >
+            <div className="grid gap-2 sm:grid-cols-2">
+              <SelectControl icon={<Sigma size={12} />} label="Topic / Branch" value={topicBranch} onChange={event => setTopicBranch(event.target.value as MathTopicBranch)}>
+                {topicBranches.map(item => (
+                  <option key={item} value={item} className="bg-white text-gray-950 dark:bg-slate-950 dark:text-white">{item}</option>
+                ))}
+              </SelectControl>
+              <SelectControl icon={<Calculator size={12} />} label="Difficulty" value={difficulty} onChange={event => setDifficulty(event.target.value as MathDifficulty)}>
+                {mathDifficulties.map(item => (
+                  <option key={item} value={item} className="bg-white text-gray-950 dark:bg-slate-950 dark:text-white">{item}</option>
+                ))}
+              </SelectControl>
+              <SelectControl icon={<Languages size={12} />} label="Language" value={language} onChange={event => setLanguage(event.target.value as AssistantLanguageCode)}>
+                {assistantLanguages.map(item => (
+                  <option key={item.code} value={item.code} className="bg-white text-gray-950 dark:bg-slate-950 dark:text-white">{item.label} - {item.nativeLabel}</option>
+                ))}
+              </SelectControl>
+              <SelectControl icon={<Lightbulb size={12} />} label="Answer Style" value={depth} onChange={event => setDepth(event.target.value as ExplanationDepth)}>
+                {Object.entries(depthLabels).map(([value, label]) => (
+                  <option key={value} value={value} className="bg-white text-gray-950 dark:bg-slate-950 dark:text-white">{label}</option>
+                ))}
+              </SelectControl>
+            </div>
+
             <label className="block">
-              <span className="text-xs font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
-                Problem
-              </span>
+              <span className="text-xs font-black uppercase tracking-widest text-[var(--app-text-subtle)]">Problem</span>
               <textarea
                 value={problem}
                 onChange={event => setProblem(event.target.value)}
                 placeholder={`Type any ${topicBranch.toLowerCase()} problem. Example: ${selectedExamples[0]}`}
-                className="form-control mt-2 min-h-56 w-full resize-y px-4 py-3 text-sm leading-6"
+                className="form-control mt-2 min-h-52 w-full resize-y px-4 py-3 text-sm leading-6"
+                aria-label="Math problem"
               />
-              <span className="mt-2 block text-[11px] font-semibold leading-5 text-[var(--app-text-muted)]">
-                {latexHint}
-              </span>
+              <span className="mt-2 block text-[11px] font-semibold leading-5 text-[var(--app-text-muted)]">{latexHint}</span>
             </label>
 
             <input
@@ -408,20 +399,15 @@ Rendering rules:
                 )}
                 {imageAttachment && (
                   <div className="surface-muted flex items-center gap-3 p-2.5 text-xs text-[var(--app-text)]">
-                    <img src={imageAttachment.dataUrl} alt="" className="h-14 w-14 rounded-xl object-cover" />
+                    <img src={imageAttachment.dataUrl} alt="" className="h-14 w-14 rounded-lg object-cover" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-bold">{imageAttachment.name}</div>
-                      <div className="mt-0.5 flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+                      <div className="mt-0.5 flex items-center gap-1 text-[11px] text-[var(--app-text-muted)]">
                         <ImageIcon size={12} />
                         {imageAttachment.sizeLabel}
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setImageAttachment(null)}
-                      className="icon-button icon-button-sm"
-                      title="Remove image"
-                    >
+                    <button type="button" onClick={() => setImageAttachment(null)} className="icon-button icon-button-sm" title="Remove image" aria-label="Remove uploaded image">
                       <X size={15} />
                     </button>
                   </div>
@@ -430,19 +416,11 @@ Rendering rules:
             )}
 
             <div className="flex flex-col gap-2 sm:flex-row">
-              <button
-                type="submit"
-                disabled={isLoading || (!problem.trim() && !imageAttachment)}
-                className="primary-action px-4 py-3 text-sm disabled:opacity-45"
-              >
+              <button type="submit" disabled={isLoading || (!problem.trim() && !imageAttachment)} className="primary-action px-4 py-3 text-sm disabled:opacity-45">
                 {isLoading ? <Loader2 size={17} className="animate-spin" /> : <Send size={17} />}
                 Solve Problem
               </button>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="secondary-action border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-800 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200"
-              >
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="secondary-action border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200">
                 <Paperclip size={17} />
                 Upload Image
               </button>
@@ -463,17 +441,11 @@ Rendering rules:
             </div>
           </form>
 
-          <div className="mt-5">
-            <div className="mb-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
-              Try Examples
-            </div>
+          <div className="border-t border-[var(--app-border)] p-4 sm:p-5">
+            <div className="mb-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-subtle)]">Examples</div>
             <div className="grid gap-2">
               {selectedExamples.map(item => (
-                <button
-                  key={item}
-                  onClick={() => solveProblem(item)}
-                  className="command-row px-3 py-2 text-xs font-semibold leading-5"
-                >
+                <button key={item} onClick={() => solveProblem(item)} className="command-row px-3 py-2 text-xs font-semibold leading-5">
                   {item}
                 </button>
               ))}
@@ -481,45 +453,63 @@ Rendering rules:
           </div>
         </section>
 
-        <section className="surface-card overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--app-border)] px-4 py-3">
+        <section className="workspace-panel min-h-[34rem] overflow-hidden">
+          <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-4 py-3">
             <div className="flex items-center gap-2">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
                 <Calculator size={18} />
               </div>
               <div>
-                <h2 className="font-heading text-sm font-black text-[var(--app-text)]">Solution</h2>
-                <p className="text-[11px] text-[var(--app-text-muted)]">
-                  {selectedLanguage.label} output with voice playback
-                </p>
+                <h2 className="font-heading text-sm font-black text-[var(--app-text)]">Solution Panel</h2>
+                <p className="text-[11px] text-[var(--app-text-muted)]">{selectedLanguage.label} output with copy and voice actions</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={copySolution}
-                disabled={!solution}
-                className="secondary-action px-3 py-2 text-xs disabled:opacity-40"
-              >
+              <button onClick={copySolution} disabled={!solution} className="secondary-action px-3 py-2 text-xs disabled:opacity-40">
                 {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                 {copied ? 'Copied' : 'Copy'}
               </button>
-              <button
-                onClick={toggleVoice}
-                disabled={!solution}
-                className="primary-action bg-cyan-600 px-3 py-2 text-xs text-white hover:bg-cyan-500 disabled:opacity-40 dark:bg-cyan-500 dark:text-white"
-              >
+              <button onClick={toggleVoice} disabled={!solution} className="primary-action px-3 py-2 text-xs disabled:opacity-40">
                 {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
                 {isSpeaking ? 'Stop' : 'Voice'}
               </button>
             </div>
           </div>
 
-          <div className="min-h-[32rem] overflow-y-auto p-4 sm:p-5">
+          <div className="h-full overflow-y-auto p-4 sm:p-5">
+            {(solution || isLoading) && (
+              <div className="mb-4 grid gap-2 sm:grid-cols-5">
+                {solutionPath.map((step, index) => (
+                  <div key={step} className={`rounded-lg border px-2.5 py-2 text-center text-[11px] font-black ${isLoading && index > 1 ? 'border-[var(--app-border)] bg-[var(--app-surface-muted)] text-[var(--app-text-subtle)]' : 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200'}`}>
+                    {index + 1}. {step}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {isLoading && (
-              <div className="flex items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 p-4 text-sm font-bold text-cyan-800 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200">
-                <Loader2 size={18} className="animate-spin" />
-                Solving carefully with formulas, steps, and verification...
+              <div className="surface-muted space-y-4 p-5">
+                <div className="flex items-center gap-2 text-sm font-bold text-sky-700 dark:text-sky-300">
+                  <Loader2 size={18} className="animate-spin" />
+                  Solving carefully with formulas, steps, and verification...
+                </div>
+                <div className="space-y-3">
+                  <div className="skeleton-line h-3 w-11/12" />
+                  <div className="skeleton-line h-3 w-3/4" />
+                  <div className="skeleton-line h-24 w-full rounded-lg" />
+                  <div className="skeleton-line h-3 w-5/6" />
+                  <div className="skeleton-line h-3 w-2/3" />
+                </div>
+              </div>
+            )}
+
+            {!isLoading && finalAnswer && (
+              <div className="mb-4 rounded-lg border border-sky-200 bg-sky-50 p-4 dark:border-sky-500/30 dark:bg-sky-500/10">
+                <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-sky-700 dark:text-sky-300">Final Answer</div>
+                <div className="math-solution-panel text-sm">
+                  <MarkdownAnswer content={finalAnswer} />
+                </div>
               </div>
             )}
 
@@ -532,11 +522,9 @@ Rendering rules:
             {!isLoading && !solution && (
               <div className="surface-muted flex min-h-[28rem] flex-col items-center justify-center border-dashed text-center">
                 <Calculator size={34} className="text-[var(--app-text-subtle)]" />
-                <p className="mt-3 text-sm font-black text-[var(--app-text)]">
-                  Your worked solution will appear here.
-                </p>
+                <p className="mt-3 text-sm font-black text-[var(--app-text)]">Your worked solution will appear here.</p>
                 <p className="mt-1 max-w-sm text-xs leading-5 text-[var(--app-text-muted)]">
-                  Ask for a quick result, a full exam answer, or a detailed teaching explanation.
+                  The solver will show the problem, givens, method, step-by-step work, verification, and final answer when the AI returns a result.
                 </p>
               </div>
             )}
@@ -546,3 +534,25 @@ Rendering rules:
     </div>
   );
 };
+
+const SelectControl: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  onChange: React.ChangeEventHandler<HTMLSelectElement>;
+  children: React.ReactNode;
+}> = ({ icon, label, value, onChange, children }) => (
+  <label className="surface-muted px-3 py-2">
+    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--app-text-subtle)]">
+      {icon}
+      {label}
+    </span>
+    <select
+      value={value}
+      onChange={onChange}
+      className="mt-1 w-full bg-transparent text-xs font-black text-[var(--app-text)] outline-none"
+    >
+      {children}
+    </select>
+  </label>
+);

@@ -30,13 +30,13 @@ export const aiService = {
   }): Promise<ChatResponsePayload> {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 45000);
-    const allowFallback = params.allowFallback !== false;
+    const allowFallback = params.mode === 'math' ? params.allowFallback === true : params.allowFallback !== false;
 
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
+        body: JSON.stringify({ ...params, allowFallback }),
         signal: controller.signal,
       });
       const data = await response.json().catch(() => null);

@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
+import type { GenerateContentConfig } from '@google/genai';
 import dotenv from 'dotenv';
 import { findTopicKnowledge } from './src/services/academicKnowledge';
 
@@ -15,9 +16,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const MATH_GEMINI_TEMPERATURE = 0.12;
+const MATH_GEMINI_MAX_OUTPUT_TOKENS = 8192;
 const NVIDIA_BASE_URL = process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
 const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
 const NVIDIA_TIMEOUT_MS = Number(process.env.NVIDIA_TIMEOUT_MS) || 35000;
+let lastNvidiaAuthError = '';
 const getNvidiaApiKey = () =>
   process.env.NVIDIA_API_KEY ||
   process.env.NVIDIA_INFERENCE_API_KEY ||
@@ -80,9 +84,13 @@ async function callNvidiaChat(params: {
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
       console.warn(`NVIDIA API returned ${response.status}: ${errorText.slice(0, 300)}`);
+      lastNvidiaAuthError = response.status === 401
+        ? 'The configured NVIDIA API key was rejected with 401 Unauthorized. Check that the key is an NVIDIA NIM key and has not expired or been copied from the wrong provider.'
+        : `NVIDIA API returned ${response.status}.`;
       return null;
     }
 
+    lastNvidiaAuthError = '';
     const data = await response.json();
     return data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || null;
   } catch (error) {
@@ -108,6 +116,24 @@ function parseJsonFromText<T = any>(text: string | null | undefined, fallback: T
     }
     return fallback;
   }
+}
+
+function buildGeminiConfig(systemInstruction: string, isMathMode: boolean, temperature: number): GenerateContentConfig {
+  return {
+    systemInstruction,
+    temperature: isMathMode ? MATH_GEMINI_TEMPERATURE : temperature,
+    ...(isMathMode ? { maxOutputTokens: MATH_GEMINI_MAX_OUTPUT_TOKENS } : {}),
+  };
+}
+
+function logAiProviderError(provider: 'gemini' | 'nvidia', error: any, context: string) {
+  const status = error?.status || error?.statusCode || error?.response?.status || error?.cause?.status;
+  const category = error?.name || error?.code || error?.constructor?.name || 'ProviderError';
+  const message = String(error?.message || error || 'Unknown provider error')
+    .replace(/AIza[0-9A-Za-z\-_]{20,}/g, '[redacted-api-key]')
+    .slice(0, 600);
+
+  console.error(`[AI provider error] provider=${provider} context=${context} status=${status || 'unknown'} category=${category} message=${message}`);
 }
 
 // Health check
@@ -150,7 +176,9 @@ const languageNames: Record<string, string> = {
 app.post('/api/ai/chat', async (req, res) => {
   try {
     const { message, mode, subject, academicContext, history, language = 'auto', attachments = [], allowFallback = true } = req.body;
+    const studentMessage = typeof message === 'string' ? message : String(message ?? '');
     const ai = getGeminiClient();
+    const isMathMode = mode === 'math';
     const shouldAllowFallback = allowFallback !== false;
     const responseLanguage = languageNames[language] || languageNames.auto;
     const multilingualRule = `Always answer in ${responseLanguage}. Preserve technical terms in English when they are standard exam or programming vocabulary, and add simple local-language explanations beside them when useful.`;
@@ -180,26 +208,35 @@ Explain concepts step-by-step with intuitive analogies, structured points, visua
 ${universityAnswerContract}
 ${multilingualRule}`,
       math: `You are Crack Skull AI Advanced Engineering Mathematics Solver.
-Solve the student's exact question for university and competitive engineering exams. Scope includes algebra, calculus, differential equations, transforms, matrices, vectors, probability, statistics, numerical methods, complex variables, electrical engineering mathematics, mechanical systems, civil engineering calculations, control systems, and signals & systems.
+Solve the student's exact question for university and competitive engineering exams. Scope includes algebra, trigonometry, limits, derivatives, integration, differential equations, Laplace transforms, Fourier transforms, matrices, determinants, eigenvalues/eigenvectors, probability, statistics, numerical methods, complex numbers, vector calculus, engineering mathematics, electrical engineering mathematics, mechanical systems, civil engineering calculations, control systems, and signals & systems.
 
 Selected controls:
 - Topic / Branch: ${academicContext?.mathBranch || subject || 'Engineering Mathematics'}
 - Difficulty: ${academicContext?.mathDifficulty || 'University'}
 - Answer style: ${academicContext?.answerStyle || 'Exam Steps'}
 
-Mandatory response structure, using these exact Markdown H1 headings:
-# Problem Restatement
-# Given
-# Required
-# Assumptions and Units
-# Formula / Theorem Used
-# Step-by-Step Solution
-# Verification
-# Final Answer
-# Exam Tip
+Mandatory response structure, using these exact Markdown H3 headings:
+### Problem Restatement
+### Given
+### Required
+### Assumptions and Units
+### Formula / Theorem Used
+### Step-by-Step Solution
+### Verification
+### Final Answer
+### Exam Tip
 
 Rules:
+- Identify the mathematical topic first.
 - Solve the actual question, never return a generic answer template.
+- Clearly state all given information and determine exactly what must be found.
+- Select the appropriate formula, theorem, identity, transform property, numerical method, or proof technique before solving.
+- Solve step by step and do not skip important algebraic, trigonometric, calculus, matrix, probability, or numerical-method transformations.
+- Handle multi-part questions separately, with labels such as Part (a), Part (b), etc.
+- Before writing the final answer, recompute the arithmetic/algebra independently inside the Verification section.
+- If verification contradicts the working, correct the working and final answer before responding.
+- Preserve exact symbolic forms such as radicals, fractions, constants, eigenvalues, transforms, and general solutions where appropriate.
+- Use decimal approximations only when useful, and clearly label them as approximations.
 - Use properly formatted LaTeX for all equations.
 - Use inline math delimiters \\( ... \\) and block math delimiters \\[ ... \\] or $$ ... $$.
 - Do not put equations in code fences.
@@ -211,7 +248,8 @@ Rules:
 - For numerical methods, show iterations, tolerance, and convergence condition.
 - For matrix problems, verify results when practical.
 - Do not claim a result is verified unless the verification calculation is shown.
-- For incomplete questions, state a reasonable assumption or solve symbolically; never invent values.
+- For ambiguous questions, state assumptions explicitly.
+- For incomplete questions, solve symbolically or state exactly what data is missing; never invent missing numerical values.
 - Make the final result visually prominent with \\[\\boxed{...}\\].
 - For uploaded question photos, transcribe the visible problem first, then solve it. If the image is unreadable, say that clearly.
 - Respect the selected language and answer-style controls.
@@ -277,7 +315,8 @@ Response language: ${responseLanguage}
 
 Previous history summary: ${Array.isArray(history) ? history.slice(-4).map((h: { role: string; content: string }) => `${h.role}: ${h.content}`).join('\n') : 'None'}
 
-Student question/prompt: ${message}
+Student question/prompt (verbatim, complete):
+${studentMessage}
 
 ${attachmentInstruction}
 ${documentAttachmentText ? `Extracted PDF/PPTX attachment text:\n${documentAttachmentText}` : ''}
@@ -302,7 +341,7 @@ Provide a comprehensive, ChatGPT-style Markdown response with clear headers, sho
     const geminiContents = geminiParts ? [{ role: 'user', parts: geminiParts }] : prompt;
 
     const shouldPreferGeminiForVision = imageAttachments.length > 0 && ai;
-    const isImageOnlyMathPrompt = mode === 'math' && imageAttachments.length > 0 && /^Solve the uploaded handwritten or printed math problem/i.test(String(message || ''));
+    const isImageOnlyMathPrompt = mode === 'math' && imageAttachments.length > 0 && /^Solve the uploaded handwritten or printed math problem/i.test(studentMessage);
 
     if (isImageOnlyMathPrompt && !ai && !shouldAllowFallback) {
       return res.status(503).json({
@@ -313,35 +352,91 @@ Provide a comprehensive, ChatGPT-style Markdown response with clear headers, sho
       });
     }
 
+    if (isMathMode) {
+      if (!ai) {
+        if (!shouldAllowFallback) {
+          return res.status(503).json({
+            error: 'Gemini is unavailable. Configure GEMINI_API_KEY to solve this math problem.',
+            mode,
+            isFallback: false,
+            provider: 'unavailable',
+          });
+        }
+
+        return res.json({
+          reply: generateOfflineAiReply(studentMessage, mode, subject, responseLanguage),
+          mode,
+          isFallback: true,
+          provider: 'offline',
+        });
+      }
+
+      try {
+        const response = await ai.models.generateContent({
+          model: GEMINI_MODEL,
+          contents: geminiContents as any,
+          config: buildGeminiConfig(chosenSystemInstruction, true, MATH_GEMINI_TEMPERATURE),
+        });
+
+        const finishReason = response.candidates?.[0]?.finishReason;
+        const reply = response.text?.trim();
+        if (!reply) {
+          throw new Error(`Gemini returned an empty math response${finishReason ? ` (finishReason: ${finishReason})` : ''}.`);
+        }
+
+        return res.json({
+          reply: enhanceAcademicReply(reply, studentMessage, subject, mode),
+          mode,
+          isFallback: false,
+          provider: 'gemini',
+          finishReason,
+        });
+      } catch (error: any) {
+        logAiProviderError('gemini', error, imageAttachments.length ? 'math-vision' : 'math-text');
+        if (shouldAllowFallback) {
+          return res.json({
+            reply: generateOfflineAiReply(studentMessage, mode, subject, responseLanguage),
+            mode,
+            isFallback: true,
+            provider: 'offline',
+          });
+        }
+        throw error;
+      }
+    }
+
     if (shouldPreferGeminiForVision) {
-      const response = await ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: geminiContents as any,
-        config: {
-          systemInstruction: chosenSystemInstruction,
-          temperature: 0.45,
-        },
-      });
+      let response;
+      try {
+        response = await ai.models.generateContent({
+          model: GEMINI_MODEL,
+          contents: geminiContents as any,
+          config: buildGeminiConfig(chosenSystemInstruction, false, 0.45),
+        });
+      } catch (error) {
+        logAiProviderError('gemini', error, 'vision');
+        throw error;
+      }
 
       const reply = response.text || 'Unable to inspect the uploaded image. Please try a clearer photo or type the problem.';
-      return res.json({ reply: enhanceAcademicReply(reply, message, subject, mode), mode, isFallback: false, provider: 'gemini' });
+      return res.json({ reply: enhanceAcademicReply(reply, studentMessage, subject, mode), mode, isFallback: false, provider: 'gemini' });
     }
 
     const nvidiaReply = await callNvidiaChat({
       system: chosenSystemInstruction,
       prompt,
-      temperature: 0.2,
-      maxTokens: 2600,
+      temperature: isMathMode ? 0.05 : 0.2,
+      maxTokens: isMathMode ? 4600 : 2600,
     });
 
     if (nvidiaReply) {
-      return res.json({ reply: enhanceAcademicReply(nvidiaReply, message, subject, mode), mode, isFallback: false, provider: 'nvidia' });
+      return res.json({ reply: enhanceAcademicReply(nvidiaReply, studentMessage, subject, mode), mode, isFallback: false, provider: 'nvidia' });
     }
 
     if (!ai) {
       if (!shouldAllowFallback) {
         return res.status(503).json({
-          error: 'Live AI provider is unavailable. Configure GEMINI_API_KEY, NVIDIA_API_KEY, NVIDIA_INFERENCE_API_KEY, or Vibe_Coder to solve this problem.',
+          error: lastNvidiaAuthError || 'Live AI provider is unavailable. Configure GEMINI_API_KEY, NVIDIA_API_KEY, NVIDIA_INFERENCE_API_KEY, or Vibe_Coder to solve this problem.',
           mode,
           isFallback: false,
           provider: 'unavailable',
@@ -349,27 +444,30 @@ Provide a comprehensive, ChatGPT-style Markdown response with clear headers, sho
       }
 
       return res.json({
-        reply: generateOfflineAiReply(message, mode, subject, responseLanguage),
+        reply: generateOfflineAiReply(studentMessage, mode, subject, responseLanguage),
         mode,
         isFallback: true,
         provider: 'offline',
       });
     }
 
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: geminiContents as any,
-      config: {
-        systemInstruction: chosenSystemInstruction,
-        temperature: 0.7,
-      },
-    });
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: geminiContents as any,
+        config: buildGeminiConfig(chosenSystemInstruction, false, 0.7),
+      });
+    } catch (error) {
+      logAiProviderError('gemini', error, 'chat');
+      throw error;
+    }
 
     const reply = response.text || 'Unable to generate response. Please try again.';
-    res.json({ reply: enhanceAcademicReply(reply, message, subject, mode), mode, isFallback: false, provider: 'gemini' });
+    res.json({ reply: enhanceAcademicReply(reply, studentMessage, subject, mode), mode, isFallback: false, provider: 'gemini' });
   } catch (error: any) {
     console.error('Chat API Error:', error);
-    if (req.body?.allowFallback === false) {
+    if (req.body?.allowFallback === false || req.body?.mode === 'math') {
       return res.status(500).json({
         error: error.message || 'Live AI provider failed while solving this problem.',
         mode: req.body?.mode || 'tutor',
@@ -882,7 +980,7 @@ I could not reach the live AI model, so I cannot fully solve every arbitrary upl
 #### 4. Final Answer
 Box the final result and add one sentence explaining what it means.
 
-Live AI is needed for full image/PDF/PPTX problem solving. Add \`NVIDIA_API_KEY\`, \`Vibe_Coder\`, or \`GEMINI_API_KEY\` in Render/local env to enable exact solutions.`;
+Live Gemini AI is needed for full image/PDF/PPTX problem solving. Add \`GEMINI_API_KEY\` in Render/local env to enable exact solutions.`;
   }
 
   if (cleanMsg.includes('binary search') || cleanMsg.includes('search algorithm')) {
@@ -1110,7 +1208,9 @@ function enhanceAcademicReply(reply: string, message: string, subject?: string, 
 }
 
 function generateOfflineMathReply(message: string, subject = 'Mathematics', languageNote: string): string | null {
-  const quadratic = solveSimpleQuadratic(message);
+  const question = extractMathQuestion(message);
+  const normalizedQuestion = normalizeMathInput(question);
+  const quadratic = solveSimpleQuadratic(normalizedQuestion);
   if (quadratic) {
     return `### Quadratic Equation: ${quadratic.display}
 
@@ -1144,11 +1244,9 @@ ${quadratic.steps}
 Always calculate the discriminant first. It tells whether the roots are real distinct, real equal, or complex.`;
   }
 
-  const definiteIntegral = message.match(/(?:integral|integrate|integration)\s+(?:of\s+)?x(?:\^|\*\*)?(\d+)\s+from\s+(-?\d+(?:\.\d+)?)\s+to\s+(-?\d+(?:\.\d+)?)/i);
+  const definiteIntegral = extractDefinitePowerIntegral(normalizedQuestion);
   if (definiteIntegral) {
-    const power = Number(definiteIntegral[1]);
-    const lower = Number(definiteIntegral[2]);
-    const upper = Number(definiteIntegral[3]);
+    const { power, lower, upper } = definiteIntegral;
     const newPower = power + 1;
     const coefficient = 1 / newPower;
     const upperValue = Math.pow(upper, newPower);
@@ -1196,7 +1294,7 @@ Here, **n = ${power}**, so:
 Mention the **power rule**, write the substitution of upper and lower limits clearly, and do not forget the subtraction order: **upper limit value - lower limit value**.`;
   }
 
-  const derivativeExpression = extractDerivativeExpression(message);
+  const derivativeExpression = extractDerivativeExpression(normalizedQuestion);
   const derivativeTerms = derivativeExpression ? differentiatePolynomial(derivativeExpression) : null;
   if (derivativeExpression && derivativeTerms) {
     const steps = derivativeTerms.steps.map(step => `- ${step}`).join('\n');
@@ -1228,7 +1326,186 @@ ${steps}
 **Answer: ${derivativeTerms.result}**`;
   }
 
+  const matrix = extractMatrix(question) || extractMatrix(normalizedQuestion);
+  if (matrix && /inverse|a\^-?1|a\^{-1}|verify/i.test(normalizedQuestion)) {
+    const inverse = invertMatrix(matrix);
+    if (!inverse) {
+      return `### Matrix Inverse
+
+${languageNote}
+
+#### 1. Given
+\\[
+A=${formatMatrixLatex(matrix)}
+\\]
+
+#### 2. Check
+The determinant is \\(0\\), so the matrix is singular.
+
+#### 3. Final Answer
+\\[
+\\boxed{A^{-1}\\text{ does not exist}}
+\\]`;
+    }
+
+    return `### Matrix Inverse
+
+${languageNote}
+
+#### 1. Given
+\\[
+A=${formatMatrixLatex(matrix)}
+\\]
+
+#### 2. Method
+Use Gauss-Jordan elimination on \\([A\\mid I]\\). The reduced right-hand side gives \\(A^{-1}\\).
+
+#### 3. Step-by-Step Result
+\\[
+A^{-1}=${formatMatrixLatex(inverse)}
+\\]
+
+#### 4. Verification
+Multiplying the original matrix by the computed inverse gives:
+\\[
+AA^{-1}=${formatMatrixLatex(multiplyMatrices(matrix, inverse))}
+\\]
+
+#### 5. Final Answer
+\\[
+\\boxed{A^{-1}=${formatMatrixLatex(inverse)}}
+\\]`;
+  }
+
   return null;
+}
+
+function extractMathQuestion(message: string): string {
+  return String(message || '')
+    .split(/\n\s*Math Solver controls:/i)[0]
+    .split(/\n\s*Answer-style control:/i)[0]
+    .split(/\n\s*Rendering rules:/i)[0]
+    .trim();
+}
+
+function normalizeMathInput(input: string): string {
+  return input
+    .replace(/\\\(|\\\)|\\\[|\\\]/g, ' ')
+    .replace(/\\,/g, ' ')
+    .replace(/\\left|\\right/g, '')
+    .replace(/\\Omega/g, 'ohm')
+    .replace(/\{([^{}]+)\}/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractDefinitePowerIntegral(message: string): { power: number; lower: number; upper: number } | null {
+  const textMatch = message.match(/(?:integral|integrate|integration)\s+(?:of\s+)?x(?:\^|\*\*)?(-?\d+)\s+from\s+(-?\d+(?:\.\d+)?)\s+to\s+(-?\d+(?:\.\d+)?)/i);
+  if (textMatch) {
+    return {
+      power: Number(textMatch[1]),
+      lower: Number(textMatch[2]),
+      upper: Number(textMatch[3]),
+    };
+  }
+
+  const latexMatch = message.match(/\\int_(-?\d+(?:\.\d+)?)\^(-?\d+(?:\.\d+)?)\s*x(?:\^|\*\*)?(-?\d+)/i);
+  if (latexMatch) {
+    return {
+      lower: Number(latexMatch[1]),
+      upper: Number(latexMatch[2]),
+      power: Number(latexMatch[3]),
+    };
+  }
+
+  return null;
+}
+
+function extractMatrix(message: string): number[][] | null {
+  const bmatrixMatch = message.match(/\\begin\{bmatrix\}([\s\S]*?)\\end\{bmatrix\}/i);
+  if (bmatrixMatch?.[1]) {
+    return parseMatrixRows(bmatrixMatch[1].split(/\\\\/).map(row => row.split('&')));
+  }
+
+  const bracketMatch = message.match(/\[\s*\[([\s\S]*?)\]\s*\]/);
+  if (bracketMatch?.[0]) {
+    try {
+      const parsed = JSON.parse(bracketMatch[0]);
+      if (Array.isArray(parsed)) {
+        return parseMatrixRows(parsed);
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+function parseMatrixRows(rows: unknown[]): number[][] | null {
+  const matrix = rows.map(row => {
+    const cells = Array.isArray(row) ? row : String(row).split(/[,\s]+/);
+    return cells
+      .map(value => Number(String(value).trim()))
+      .filter(value => Number.isFinite(value));
+  });
+
+  if (!matrix.length || matrix.some(row => row.length !== matrix[0].length)) return null;
+  return matrix;
+}
+
+function invertMatrix(matrix: number[][]): number[][] | null {
+  const n = matrix.length;
+  if (!n || matrix.some(row => row.length !== n)) return null;
+
+  const augmented = matrix.map((row, rowIndex) => [
+    ...row.map(Number),
+    ...Array.from({ length: n }, (_, colIndex) => (rowIndex === colIndex ? 1 : 0)),
+  ]);
+
+  for (let col = 0; col < n; col += 1) {
+    let pivotRow = col;
+    for (let row = col + 1; row < n; row += 1) {
+      if (Math.abs(augmented[row][col]) > Math.abs(augmented[pivotRow][col])) {
+        pivotRow = row;
+      }
+    }
+
+    const pivot = augmented[pivotRow][col];
+    if (Math.abs(pivot) < 1e-10) return null;
+
+    [augmented[col], augmented[pivotRow]] = [augmented[pivotRow], augmented[col]];
+    for (let j = 0; j < 2 * n; j += 1) {
+      augmented[col][j] /= pivot;
+    }
+
+    for (let row = 0; row < n; row += 1) {
+      if (row === col) continue;
+      const factor = augmented[row][col];
+      for (let j = 0; j < 2 * n; j += 1) {
+        augmented[row][j] -= factor * augmented[col][j];
+      }
+    }
+  }
+
+  return augmented.map(row => row.slice(n).map(cleanMatrixNumber));
+}
+
+function multiplyMatrices(a: number[][], b: number[][]): number[][] {
+  return a.map(row =>
+    b[0].map((_, colIndex) =>
+      cleanMatrixNumber(row.reduce((sum, value, index) => sum + value * b[index][colIndex], 0)),
+    ),
+  );
+}
+
+function cleanMatrixNumber(value: number): number {
+  const rounded = Math.round(value * 1e8) / 1e8;
+  return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+function formatMatrixLatex(matrix: number[][]): string {
+  return `\\begin{bmatrix}${matrix.map(row => row.map(formatNumber).join(' & ')).join('\\\\')}\\end{bmatrix}`;
 }
 
 function solveSimpleQuadratic(message: string): {
